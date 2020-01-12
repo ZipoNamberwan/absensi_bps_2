@@ -1,6 +1,10 @@
 import 'dart:async';
 
+import 'package:absensi_bps_2/classes/bidang.dart';
+import 'package:absensi_bps_2/src/color.dart';
+import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:date_utils/date_utils.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:absensi_bps_2/classes/event_list.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
@@ -10,12 +14,16 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 export 'package:absensi_bps_2/classes/event_list.dart';
 import 'package:absensi_bps_2/classes/detail_absensi.dart';
-import 'package:absensi_bps_2/api_tad_absensi.dart';
-import 'package:absensi_bps_2/api_custom.dart';
+import 'package:absensi_bps_2/api/api_tad_absensi.dart';
+import 'package:absensi_bps_2/api/api_custom.dart';
 import 'dart:convert';
 
 import 'classes/keterangan_absensi.dart';
+import 'classes/shared_preference.dart';
+import 'classes/statistik.dart';
 import 'detail_absensi_page.dart';
+import 'home.dart';
+import 'login/login.dart';
 
 class CalendarCarousel<T> extends StatefulWidget {
   final double viewportFraction;
@@ -85,9 +93,12 @@ class CalendarCarousel<T> extends StatefulWidget {
   final Pegawai selectedPegawai;
   final MapPegawaiEvent<DetailAbsensi> mapPegawaiEvent;
   final MapPegawaiEvent<KeteranganAbsensi> mapKeteranganEvent;
-  final String idBidang;
+  final Bidang bidang;
   final Function onPressedDrawer;
   final GlobalKey<ScaffoldState> scaffoldKey;
+  final Color telatColor;
+  final Color masukColor;
+  final Color pulangColor;
 
   CalendarCarousel({
     this.viewportFraction = 1.0,
@@ -116,8 +127,8 @@ class CalendarCarousel<T> extends StatefulWidget {
     this.headerText,
     this.headerHeight = kToolbarHeight,
     this.weekendTextStyle,
-    @deprecated this.markedDates,
-    @deprecated this.markedDateColor,
+    this.markedDates,
+    this.markedDateColor,
     this.markedDateShowIcon = false,
     this.markedDateIconBorderColor,
     this.markedDateIconMaxShown = 2,
@@ -156,9 +167,12 @@ class CalendarCarousel<T> extends StatefulWidget {
     this.selectedPegawai,
     this.mapPegawaiEvent,
     this.mapKeteranganEvent,
-    this.idBidang,
+    this.bidang,
     this.onPressedDrawer,
     this.scaffoldKey,
+    @required this.telatColor,
+    @required this.masukColor,
+    @required this.pulangColor,
   });
 
   @override
@@ -167,6 +181,10 @@ class CalendarCarousel<T> extends StatefulWidget {
 
 class _CalendarState<T> extends State<CalendarCarousel<T>>
     with TickerProviderStateMixin {
+  static final int homePageIndex = 0;
+  static final int calendarPageIndex = 1;
+  static final int akunPageIndex = 3;
+
   PageController _controller;
   List<DateTime> _dates = List(3);
   List<List<DateTime>> _weeks = List(3);
@@ -187,6 +205,10 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   bool _isListPegawaiLoading = true;
   bool _isKeteranganLoading = true;
   MapEvent<bool> _mapDatetimeAfterPost = new MapEvent();
+  int _currentIndex = 0;
+  Widget _currentPage;
+  AnimationController _fadeAnimationController;
+  Animation<double> _fadeAnimation;
 
   /// When FIRSTDAYOFWEEK is 0 in dart-intl, it represents Monday. However it is the second day in the arrays of Weekdays.
   /// Therefore we need to add 1 modulo 7 to pick the right weekday from intl. (cf. [GlobalMaterialLocalizations])
@@ -237,12 +259,28 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _animationAfterPost = CurvedAnimation(
         parent: _animationAfterPostController, curve: Curves.easeOut);
 
+    _fadeAnimationController = AnimationController(
+        vsync: this, duration: Duration(milliseconds: 1500));
+
+    _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
+        parent: _fadeAnimationController, curve: Curves.easeIn));
+
+    _fadeAnimationController.addListener(() {
+      setState(() {});
+    });
+
+    _fadeAnimationController.forward().orCancel;
+
     _setDate();
   }
 
   @override
   dispose() {
     _controller.dispose();
+    _animationAfterPostController.dispose();
+    _animationEventController.dispose();
+    _animationKeteranganController.dispose();
+    _fadeAnimationController.dispose();
     super.dispose();
   }
 
@@ -255,7 +293,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     } else {
       _isReloadSelectedDate = true;
     }
-    return Container(
+
+    Widget calendarPage = Container(
       width: widget.width,
       height: widget.height - 5,
       child: Column(
@@ -263,16 +302,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           SizedBox(
               height: widget.headerHeight,
               child: Container(
-                  /*
-                  decoration: BoxDecoration(
-                      color: firstPrimaryColor,
-                      boxShadow: [
-                        BoxShadow(
-                            color: firstPrimaryColor,
-                            blurRadius: 5,
-                            spreadRadius: 1)
-                      ],
-                      gradient: appGradient),*/
                   child: Stack(
                 children: <Widget>[
                   Row(
@@ -287,7 +316,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                             color: widget.iconColor),
                         onPressed: widget.onPressedDrawer,
                       ),
-                      widget.idBidang != null
+                      widget.bidang != null
                           ? Expanded(
                               child: Container(
                                 child: DropdownButton<String>(
@@ -315,11 +344,13 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                               child: Container(
                                 width:
                                     MediaQuery.of(context).size.width / 2 - 70,
-                                child: Text(
-                                  widget.selectedPegawai.nama,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: widget.headerTextStyle,
+                                child: Center(
+                                  child: Text(
+                                    widget.selectedPegawai.nama,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: widget.headerTextStyle,
+                                  ),
                                 ),
                               ),
                               flex: 2,
@@ -367,6 +398,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           Expanded(
               child: PageView.builder(
             itemCount: 3,
+            dragStartBehavior: DragStartBehavior.down,
             physics: widget.isScrollable
                 ? ScrollPhysics()
                 : NeverScrollableScrollPhysics(),
@@ -382,10 +414,118 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         ],
       ),
     );
+
+    Widget homePage = HomePage(
+      pegawai: widget.selectedPegawai,
+      stat: new Statistik(
+          cutiFreq: 4,
+          sakitFreq: 2,
+          tanpaKeteranganFreq: 1,
+          telatFreq: 0,
+          tugasFreq: 5),
+      height: widget.height,
+    );
+
+    Widget akunPage = Container();
+
+    if (_currentIndex == homePageIndex) {
+      _currentPage = homePage;
+    } else if (_currentIndex == calendarPageIndex) {
+      _currentPage = calendarPage;
+    } else {
+      _currentPage = akunPage;
+    }
+
+    return Scaffold(
+        drawer: Drawer(
+          child: Stack(
+            children: <Widget>[
+              ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  widget.selectedPegawai != null
+                      ? Container()
+                      : Container(
+                          height: 200,
+                          decoration: BoxDecoration(color: Colors.grey[350]),
+                          child: Center(
+                            child: Text(
+                              widget.bidang.namabidang,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 30),
+                            ),
+                          ),
+                        ),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    child: RaisedButton(
+                      onPressed: () {
+                        SavedPreference.removeAll();
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LoginPage()),
+                            (Route<dynamic> route) => false);
+                      },
+                      child: Text("Sign Out"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        key: widget.scaffoldKey,
+        body: SingleChildScrollView(
+          child:
+              //custom icon
+              Container(
+            margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+            child: Opacity(
+              child: _currentPage,
+              opacity: _fadeAnimation.value,
+            ),
+          ),
+        ),
+        bottomNavigationBar: BottomNavyBar(
+          showElevation: true,
+          itemCornerRadius: 15,
+          curve: Curves.easeIn,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          selectedIndex: _currentIndex,
+          onItemSelected: (index) {
+            //_fadeAnimationController.reset();
+            setState(() => _currentIndex = index);
+            if (_fadeAnimation.status == AnimationStatus.completed) {
+              _fadeAnimationController.reset();
+            }
+            _fadeAnimationController.forward().orCancel;
+          },
+          items: <BottomNavyBarItem>[
+            BottomNavyBarItem(
+                textAlign: TextAlign.center,
+                title: Text('Home'),
+                icon: Icon(Icons.home),
+                activeColor: secondColor,
+                inactiveColor: Colors.grey),
+            BottomNavyBarItem(
+                textAlign: TextAlign.center,
+                title: Text('Absensi'),
+                icon: Icon(Icons.calendar_today),
+                activeColor: secondColor,
+                inactiveColor: Colors.grey),
+            BottomNavyBarItem(
+                textAlign: TextAlign.center,
+                title: Text('Akun'),
+                icon: Icon(Icons.account_circle),
+                activeColor: secondColor,
+                inactiveColor: Colors.grey),
+          ],
+        ));
   }
 
   AnimatedBuilder builder(int slideIndex) {
-    double screenWidth = MediaQuery.of(context).size.width;
     int totalItemCount = widget.staticSixWeekFormat
         ? 42
         : DateTime(
@@ -661,7 +801,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     });
 
     _navigateToDetail(
-        widget.idBidang != null
+        widget.bidang != null
             ? widget.pegawaiList.maps[_selectedPegawai]
             : widget.selectedPegawai,
         picked,
@@ -797,7 +937,9 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         });
 
         _controller.animateToPage(page,
-            duration: Duration(milliseconds: 1), curve: Threshold(0.0));
+            duration: Duration(milliseconds: 1), curve: Threshold(0.0)).then((value){
+
+        });
 
         _getDetailAbsensi(_selectedPegawai, _dates[1]);
         _getKeteranganAbsensi(_selectedPegawai, _dates[1]);
@@ -866,15 +1008,15 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       int milisec = hour * 3600 + minute * 60 + second;
       if (i == 0) {
         if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600))) {
-          bg = Color.fromRGBO(211, 48, 48, 100);
+          bg = widget.telatColor;
         } else {
-          bg = Color.fromRGBO(1, 152, 137, 100);
+          bg = widget.masukColor;
         }
       } else {
         if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600))) {
-          bg = Color.fromRGBO(211, 48, 48, 100);
+          bg = widget.telatColor;
         } else {
-          bg = Color.fromRGBO(62, 134, 243, 100);
+          bg = widget.pulangColor;
         }
       }
       tmp.add(Container(
@@ -942,7 +1084,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       APITAD.getData(nip, date).then((response) {
         _animationEventController.forward().orCancel;
         if (response.statusCode == 500) {
-          showSnackBar("Gagal mengambil data absensi");
+          _showSnackBar("Gagal mengambil data absensi");
         } else if (response.statusCode == 200) {
           Map jsonResponse = jsonDecode(response.body);
           if (jsonResponse.length > 0) {
@@ -1064,16 +1206,25 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
   bool _getAllPegawai() {
     _isListPegawaiLoading = true;
-    ApiCustom.getAllPegawai(widget.idBidang).then((response) {
-      if (widget.idBidang != null) {
+
+    if (widget.bidang != null) {
+      ApiCustom.getAllPegawai(widget.bidang.id).then((response) {
         var jsonResponse = jsonDecode(response.body);
         PegawaiList list = PegawaiList.fromJson(jsonResponse);
         list.list
             .forEach((pegawai) => widget.pegawaiList.add(pegawai.nip, pegawai));
         _selectedPegawai = list.list[0].nip;
-      } else {
-        _selectedPegawai = widget.selectedPegawai.nip;
-      }
+
+        _getDetailAbsensi(_selectedPegawai, _dates[1]);
+        _getKeteranganAbsensi(_selectedPegawai, _dates[1]);
+
+        setState(() {
+          _isListPegawaiLoading = false;
+          _isReloadSelectedDate = false;
+        });
+      });
+    } else {
+      _selectedPegawai = widget.selectedPegawai.nip;
 
       _getDetailAbsensi(_selectedPegawai, _dates[1]);
       _getKeteranganAbsensi(_selectedPegawai, _dates[1]);
@@ -1082,7 +1233,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         _isListPegawaiLoading = false;
         _isReloadSelectedDate = false;
       });
-    });
+    }
+
     return true;
   }
 
@@ -1170,14 +1322,14 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 )));
 
     //Do something here to show result
-    if (result.status == StatusPage.after_post) {
+    if (result.status == StatusPage.afterPost) {
       KeteranganAbsensi absensi = result.keteranganAbsensi;
       _animationAfterPostController.reset();
       _mapDatetimeAfterPost.add(result.dateTime, true);
       _mapKeterangan = new MapEvent();
       _mapKeterangan.add(absensi.dateTime, absensi);
       widget.mapKeteranganEvent.add(_selectedPegawai, _mapKeterangan);
-    } else if (result.status == StatusPage.after_delete) {
+    } else if (result.status == StatusPage.afterDelete) {
       _animationAfterPostController.reset();
       _mapDatetimeAfterPost.add(result.dateTime, true);
       widget.mapKeteranganEvent.maps[_selectedPegawai].events
@@ -1190,7 +1342,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     });
   }
 
-  void showSnackBar(String message) {
+  void _showSnackBar(String message) {
     if (!widget.scaffoldKey.currentState.isDrawerOpen) {
       widget.scaffoldKey.currentState.showSnackBar(SnackBar(
           duration: Duration(milliseconds: 700),

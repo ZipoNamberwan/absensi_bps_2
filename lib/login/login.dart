@@ -6,7 +6,7 @@ import 'package:absensi_bps_2/classes/shared_preference.dart';
 import 'package:flutter/material.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
 
-import '../api_custom.dart';
+import '../api/api_custom.dart';
 import '../main.dart';
 
 class LoginPage extends StatefulWidget {
@@ -244,8 +244,8 @@ class LoginPageState extends State<LoginPage> {
         context,
         MaterialPageRoute(
             builder: (context) => bidang != null
-                ? MyHomePage(bidang: bidang)
-                : MyHomePage(pegawai: pegawai)),
+                ? AbsensiPage(bidang: bidang)
+                : AbsensiPage(pegawai: pegawai)),
         (Route<dynamic> route) => false);
   }
 

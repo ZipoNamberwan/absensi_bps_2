@@ -1,20 +1,18 @@
 library flutter_calendar_dooboo;
 
-import 'package:absensi_bps_2/src/color_scheme.dart';
+import 'package:absensi_bps_2/home.dart';
+import 'package:absensi_bps_2/src/color.dart';
+import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:flutter/material.dart';
 
-import 'package:absensi_bps_2/calendar_carousel.dart'
-    show CalendarCarousel;
+import 'package:absensi_bps_2/calendar_carousel.dart' show CalendarCarousel;
 
 import 'package:absensi_bps_2/classes/event_list.dart';
 import 'package:absensi_bps_2/classes/detail_absensi.dart';
-import 'package:flutter/services.dart';
 import 'classes/bidang.dart';
 import 'classes/keterangan_absensi.dart';
 import 'classes/shared_preference.dart';
 import 'login/login.dart';
-
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() => runApp(new MyApp());
 
@@ -44,8 +42,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.bidang, this.pegawai}) : super(key: key);
+class AbsensiPage extends StatefulWidget {
+  AbsensiPage({Key key, this.bidang, this.pegawai}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -60,10 +58,11 @@ class MyHomePage extends StatefulWidget {
   final Pegawai pegawai;
 
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  _AbsensiPageState createState() => new _AbsensiPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
+class _AbsensiPageState extends State<AbsensiPage>
+    with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   MapList<Pegawai> pegawaiList = new MapList();
   MapList<Status> statusList = new MapList();
@@ -71,19 +70,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   MapPegawaiEvent<KeteranganAbsensi> mapKeteranganEvent = new MapPegawaiEvent();
   CalendarCarousel _calendarCarousel;
 
-  FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
-
   @override
   initState() {
     /// Add more events to _markedDateMap EventList
     super.initState();
-    _flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
-    var android = new AndroidInitializationSettings('mipmap/ic_launcher');
-    var iOs = new IOSInitializationSettings();
-    var initSettings = new InitializationSettings(android, iOs);
-    _flutterLocalNotificationsPlugin.initialize(initSettings,
-        onSelectNotification: onSelectNotification);
+  }
 
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -98,7 +93,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       staticSixWeekFormat: true,
       dayPadding: 0,
       iconSize: 20,
-      headerTextStyle: TextStyle(color: Colors.black, fontSize: 14),
+      headerTextStyle: TextStyle(
+          color: Colors.black, fontSize: 17, fontWeight: FontWeight.bold),
       daysTextStyle: TextStyle(color: Colors.black, fontSize: 11),
       weekendTextStyle: TextStyle(color: Colors.red[700], fontSize: 11),
       nextDaysTextStyle: TextStyle(color: Colors.grey[400], fontSize: 11),
@@ -109,7 +105,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       weekFormat: false,
       height: MediaQuery.of(context).size.height -
           MediaQuery.of(context).padding.bottom -
-          MediaQuery.of(context).padding.top,
+          MediaQuery.of(context).padding.top -
+          kBottomNavigationBarHeight,
       width: MediaQuery.of(context).size.width,
       customGridViewPhysics: NeverScrollableScrollPhysics(),
       weekdayRowHeight: 40,
@@ -127,70 +124,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       statusList: statusList,
       mapPegawaiEvent: mapPegawaiEvent,
       mapKeteranganEvent: mapKeteranganEvent,
-      idBidang: widget.bidang != null ? widget.bidang.id : null,
+      bidang: widget.bidang != null ? widget.bidang : null,
       selectedPegawai: widget.pegawai != null ? widget.pegawai : null,
       onPressedDrawer: () {
         _scaffoldKey.currentState.openDrawer();
       },
       scaffoldKey: _scaffoldKey,
+      pulangColor: secondColor,
+      masukColor: firstColor,
+      telatColor: thirdColor,
     );
 
-    return Scaffold(
-        drawer: Drawer(
-          child: Stack(
-            children: <Widget>[
-              ListView(
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  widget.pegawai != null
-                      ? Container()
-                      : Container(
-                          height: 200,
-                          decoration: BoxDecoration(color: Colors.grey[350]),
-                          child: Center(
-                            child: Text(
-                              widget.bidang.namabidang,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 30),
-                            ),
-                          ),
-                        ),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    child: RaisedButton(
-                      onPressed: () {
-                        SavedPreference.removeAll();
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LoginPage()),
-                            (Route<dynamic> route) => false);
-                      },
-                      child: Text("Sign Out"),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        key: _scaffoldKey,
-        /*floatingActionButton: FloatingActionButton(
-          onPressed: null,
-          child: Icon(Icons.add),
-        ),*/
-        body: SingleChildScrollView(
-          child:
-              //custom icon
-              Container(
-            margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-            child: _calendarCarousel,
-          ),
-        ));
-  }
-
-  Future onSelectNotification(String payload) async {
-    main();
+    return _calendarCarousel;
   }
 }

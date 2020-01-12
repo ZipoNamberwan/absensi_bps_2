@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:absensi_bps_2/classes/post_keterangan_absensi.dart';
+import 'package:absensi_bps_2/src/color.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-import 'api_custom.dart';
+import 'api/api_custom.dart';
 import 'classes/detail_absensi.dart';
 import 'classes/event_list.dart';
 import 'classes/keterangan_absensi.dart';
@@ -46,8 +47,6 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   Future<File> _file;
   String _base64Image = '';
   File _tmpFile;
-  String _errMessage = 'Error Uploading Image';
-  String _statusUploadImage = '';
 
   @override
   void initState() {
@@ -78,7 +77,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
             _initialKeteranganStatus != null ? _initialKeteranganStatus : null);
 
     _statusPage = new StatusPage(
-        status: StatusPage.no_post,
+        status: StatusPage.noPost,
         keteranganAbsensi: null,
         dateTime: widget.dateTime);
   }
@@ -569,7 +568,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
       setState(() {
         _isSaveLoading = false;
         _statusPage = new StatusPage(
-            status: StatusPage.after_delete,
+            status: StatusPage.afterDelete,
             keteranganAbsensi: null,
             dateTime: widget.dateTime);
       });
@@ -588,7 +587,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
 
       setState(() {
         _statusPage = new StatusPage(
-          status: StatusPage.after_post,
+          status: StatusPage.afterPost,
           keteranganAbsensi: new KeteranganAbsensi(
               pegawai: widget.pegawai,
               status: _postedStatus,
@@ -608,18 +607,6 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
 
   void _onbackPressed() {
     Navigator.pop(context, _statusPage);
-  }
-
-  Color getAbsenMasukColor() {
-    int minute = _absenMasuk.dateTime.minute;
-    int hour = _absenMasuk.dateTime.hour;
-    int second = _absenMasuk.dateTime.second;
-    int milisec = hour * 3600 + minute * 60 + second;
-    if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600))) {
-      return Color.fromRGBO(211, 48, 48, 100);
-    } else {
-      return Color.fromRGBO(1, 152, 137, 100);
-    }
   }
 
   void showSnackBar(String message) {
@@ -642,23 +629,35 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
         )));
   }
 
+  Color getAbsenMasukColor() {
+    int minute = _absenMasuk.dateTime.minute;
+    int hour = _absenMasuk.dateTime.hour;
+    int second = _absenMasuk.dateTime.second;
+    int milisec = hour * 3600 + minute * 60 + second;
+    if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600))) {
+      return thirdColor;
+    } else {
+      return firstColor;
+    }
+  }
+
   getAbsenPulangColor() {
     int minute = _absenPulang.dateTime.minute;
     int hour = _absenPulang.dateTime.hour;
     int second = _absenPulang.dateTime.second;
     int milisec = hour * 3600 + minute * 60 + second;
     if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600))) {
-      return Color.fromRGBO(211, 48, 48, 100);
+      return thirdColor;
     } else {
-      return Color.fromRGBO(62, 134, 243, 100);
+      return secondColor;
     }
   }
 }
 
 class StatusPage {
-  static final String no_post = "no post";
-  static final String after_post = "after post";
-  static final String after_delete = "after delete";
+  static final String noPost = "no post";
+  static final String afterPost = "after post";
+  static final String afterDelete = "after delete";
 
   String status;
   KeteranganAbsensi keteranganAbsensi;
