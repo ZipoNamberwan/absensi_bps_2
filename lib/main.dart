@@ -1,8 +1,6 @@
 library flutter_calendar_dooboo;
 
-import 'package:absensi_bps_2/home.dart';
 import 'package:absensi_bps_2/src/color.dart';
-import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:flutter/material.dart';
 
 import 'package:absensi_bps_2/calendar_carousel.dart' show CalendarCarousel;
@@ -11,7 +9,6 @@ import 'package:absensi_bps_2/classes/event_list.dart';
 import 'package:absensi_bps_2/classes/detail_absensi.dart';
 import 'classes/bidang.dart';
 import 'classes/keterangan_absensi.dart';
-import 'classes/shared_preference.dart';
 import 'login/login.dart';
 
 void main() => runApp(new MyApp());
@@ -133,6 +130,8 @@ class _AbsensiPageState extends State<AbsensiPage>
       pulangColor: secondColor,
       masukColor: firstColor,
       telatColor: thirdColor,
+      navItemColorActive: secondColor,
+      navItemColorInactive: Colors.black,
     );
 
     return _calendarCarousel;

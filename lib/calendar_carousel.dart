@@ -99,6 +99,8 @@ class CalendarCarousel<T> extends StatefulWidget {
   final Color telatColor;
   final Color masukColor;
   final Color pulangColor;
+  final Color navItemColorActive;
+  final Color navItemColorInactive;
 
   CalendarCarousel({
     this.viewportFraction = 1.0,
@@ -173,6 +175,8 @@ class CalendarCarousel<T> extends StatefulWidget {
     @required this.telatColor,
     @required this.masukColor,
     @required this.pulangColor,
+    this.navItemColorActive = secondColor,
+    this.navItemColorInactive = Colors.grey,
   });
 
   @override
@@ -260,7 +264,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         parent: _animationAfterPostController, curve: Curves.easeOut);
 
     _fadeAnimationController = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 1500));
+        vsync: this, duration: Duration(milliseconds: 1000));
 
     _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
         parent: _fadeAnimationController, curve: Curves.easeIn));
@@ -376,14 +380,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                       )
                     ],
                   ),
-                  (_isDetailLoading |
-                          _isListPegawaiLoading |
-                          _isKeteranganLoading)
-                      ? Align(
-                          child: LinearProgressIndicator(),
-                          alignment: Alignment.bottomCenter,
-                        )
-                      : Container(),
                 ],
               ))),
           WeekdayRow(
@@ -424,6 +420,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           telatFreq: 0,
           tugasFreq: 5),
       height: widget.height,
+      details: _getAbsensiToday(DateTime.now()),
     );
 
     Widget akunPage = Container();
@@ -483,7 +480,27 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
               Container(
             margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
             child: Opacity(
-              child: _currentPage,
+              child: Stack(
+                children: <Widget>[
+                  Column(
+                    children: <Widget>[
+                      SizedBox(
+                        height: widget.headerHeight,
+                        child: Container(),
+                      ),
+                      (_isDetailLoading |
+                              _isListPegawaiLoading |
+                              _isKeteranganLoading)
+                          ? Align(
+                              child: LinearProgressIndicator(),
+                              alignment: Alignment.bottomCenter,
+                            )
+                          : Container(),
+                    ],
+                  ),
+                  _currentPage
+                ],
+              ),
               opacity: _fadeAnimation.value,
             ),
           ),
@@ -507,20 +524,20 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 textAlign: TextAlign.center,
                 title: Text('Home'),
                 icon: Icon(Icons.home),
-                activeColor: secondColor,
-                inactiveColor: Colors.grey),
+                activeColor: widget.navItemColorActive,
+                inactiveColor: widget.navItemColorInactive),
             BottomNavyBarItem(
                 textAlign: TextAlign.center,
                 title: Text('Absensi'),
                 icon: Icon(Icons.calendar_today),
-                activeColor: secondColor,
-                inactiveColor: Colors.grey),
+                activeColor: widget.navItemColorActive,
+                inactiveColor: widget.navItemColorInactive),
             BottomNavyBarItem(
                 textAlign: TextAlign.center,
                 title: Text('Akun'),
                 icon: Icon(Icons.account_circle),
-                activeColor: secondColor,
-                inactiveColor: Colors.grey),
+                activeColor: widget.navItemColorActive,
+                inactiveColor: widget.navItemColorInactive),
           ],
         ));
   }
@@ -936,10 +953,10 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           this._dates = dates;
         });
 
-        _controller.animateToPage(page,
-            duration: Duration(milliseconds: 1), curve: Threshold(0.0)).then((value){
-
-        });
+        _controller
+            .animateToPage(page,
+                duration: Duration(milliseconds: 1), curve: Threshold(0.0))
+            .then((value) {});
 
         _getDetailAbsensi(_selectedPegawai, _dates[1]);
         _getKeteranganAbsensi(_selectedPegawai, _dates[1]);
@@ -1362,5 +1379,23 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
             ],
           )));
     }
+  }
+
+  List<DetailAbsensi> _getAbsensiToday(DateTime now) {
+    List<DetailAbsensi> tmp = [];
+    DetailAbsensi empty = new DetailAbsensi(dateTime: now, time: "-");
+    tmp.addAll([empty, empty]);
+    if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
+      if (widget.mapPegawaiEvent.maps[_selectedPegawai]
+              .getEvents(new DateTime(now.year, now.month, now.day))
+              .length !=
+          0) {
+        tmp = [];
+        tmp = widget.mapPegawaiEvent.maps[_selectedPegawai]
+            .getEvents(new DateTime(now.year, now.month, now.day));
+      }
+    }
+
+    return tmp;
   }
 }

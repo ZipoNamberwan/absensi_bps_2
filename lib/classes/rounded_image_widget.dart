@@ -1,5 +1,4 @@
 import 'package:absensi_bps_2/src/color.dart';
-import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as math;
 
@@ -37,7 +36,7 @@ class RoundedImageWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              if (showRanking)
+              /*if (showRanking)
                 Positioned(
                   right: 0,
                   bottom: 0,
@@ -54,11 +53,11 @@ class RoundedImageWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
+                ),*/
             ],
           ),
         ),
-        if (name != null) Text(name, style: bodyTextStyle,)
+        /*if (name != null) Text(name, style: bodyTextStyle,)*/
       ],
     );
   }

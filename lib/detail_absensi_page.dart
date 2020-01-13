@@ -28,6 +28,7 @@ class DetailAbsensiPage extends StatefulWidget {
 
 class _DetailAbsensiState extends State<DetailAbsensiPage>
     with TickerProviderStateMixin {
+  double _imageHeight;
   MapList<Status> _mapStatus = new MapList();
   DetailAbsensi _absenMasuk = new DetailAbsensi();
   DetailAbsensi _absenPulang = new DetailAbsensi();
@@ -47,10 +48,12 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   Future<File> _file;
   String _base64Image = '';
   File _tmpFile;
+  String _initialImagePath = '';
 
   @override
   void initState() {
     super.initState();
+
     _getAllStatus();
 
     _animationController = AnimationController(
@@ -69,6 +72,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
     if (widget.keterangan.length != 0) {
       _selectedStatus = widget.keterangan[0].status.id;
       _initialKeteranganStatus = widget.keterangan[0].keterangan;
+      _initialImagePath = widget.keterangan[0].gambar;
       _animationController.forward();
     }
 
@@ -83,7 +87,15 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    _keteranganController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _imageHeight = MediaQuery.of(context).size.height / 4;
     return WillPopScope(
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -423,25 +435,38 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                       style: TextStyle(fontSize: 11),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, top: 8),
-                    child: OutlineButton(
-                      onPressed: _chooseImage,
-                      splashColor: splashColor,
-                      child: Text("Choose Image"),
-                    ),
-                  ),
+                  widget.keterangan.length == 0
+                      ? Padding(
+                          padding: const EdgeInsets.only(
+                              left: 16, right: 16, top: 8),
+                          child: OutlineButton(
+                            onPressed: _chooseImage,
+                            splashColor: splashColor,
+                            child: Text("Pilih Gambar"),
+                          ),
+                        )
+                      : Container(),
                   Padding(
                     padding: const EdgeInsets.only(
                         left: 16, right: 16, top: 8, bottom: 16),
-                    child: showImage(),
+                    child: widget.keterangan.length == 0
+                        ? _showImage()
+                        : _initialImagePath != ''
+                            ? Container(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Image.network(_initialImagePath,
+                                      height: _imageHeight, fit: BoxFit.cover),
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  'Tidak ada bukti diupload',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                   ),
-                  /*OutlineButton(
-                    child: Text("Upload now"),
-                    onPressed: () {
-                      _startUpload();
-                    },
-                  ),*/
                 ],
               ),
             ),
@@ -502,7 +527,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
         });
   }
 
-  Widget showImage() {
+  Widget _showImage() {
     return FutureBuilder<File>(
       future: _file,
       builder: (BuildContext context, AsyncSnapshot<File> snapshot) {
@@ -510,24 +535,28 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
             null != snapshot.data) {
           _tmpFile = snapshot.data;
           _base64Image = base64Encode(snapshot.data.readAsBytesSync());
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            height: MediaQuery.of(context).size.height / 4,
-            child: Image.file(
-              snapshot.data,
-              fit: BoxFit.cover,
-            ),
+          return Stack(
+            children: <Widget>[
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                height: _imageHeight,
+                child: Image.file(
+                  snapshot.data,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
           );
         } else if (null != snapshot.error) {
           return const Text(
-            'Error Picking Image',
+            'Gagal mengambil gambar',
             textAlign: TextAlign.center,
           );
         } else {
           return const Text(
-            'No Image Selected',
+            'Tidak ada gambar dipilih',
             textAlign: TextAlign.center,
           );
         }
@@ -599,7 +628,6 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
         _animationController.forward();
         _afterUpdate = true;
         _isSaveLoading = false;
-
       });
       _onbackPressed();
     });
@@ -641,7 +669,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
     }
   }
 
-  getAbsenPulangColor() {
+  Color getAbsenPulangColor() {
     int minute = _absenPulang.dateTime.minute;
     int hour = _absenPulang.dateTime.hour;
     int second = _absenPulang.dateTime.second;

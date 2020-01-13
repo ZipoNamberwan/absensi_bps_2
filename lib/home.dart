@@ -5,15 +5,21 @@ import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'classes/detail_absensi.dart';
 import 'classes/keterangan_absensi.dart';
 import 'classes/rounded_image_widget.dart';
 
 class HomePage extends StatefulWidget {
   final Pegawai pegawai;
+  final List<DetailAbsensi> details;
   final Statistik stat;
   final double height;
 
-  HomePage({@required this.pegawai, @required this.stat, this.height});
+  HomePage(
+      {@required this.pegawai,
+      @required this.stat,
+      this.height,
+      @required this.details});
 
   @override
   _HomePageState createState() => new _HomePageState();
@@ -21,37 +27,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   @override
-  Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final logoHeight = screenHeight * 0.4;
+  void initState() {
+    super.initState();
+  }
 
-    const String logo = "images/bps.svg";
+  @override
+  Widget build(BuildContext context) {
+    //final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+/*    final logoHeight = screenHeight * 0.4;
+
+    const String logo = "images/bps.svg";*/
 
     return SizedBox(
       height: widget.height,
       child: Stack(
         children: <Widget>[
-          SizedBox(
-            height: kToolbarHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.dehaze,
-                    size: 20,
-                    color: Colors.black,
-                  ),
-                ),
-                Icon(
-                  Icons.search,
-                  color: primaryTextColor,
-                )
-              ],
-            ),
-          ),
           /*Transform.translate(
           offset: Offset(screenWidth * 0.4, 10),
           child: Transform.rotate(
@@ -96,11 +88,11 @@ class _HomePageState extends State<HomePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Text(
-                                      "Hello, ",
+                                      "Halo, ",
                                       style: userNameTextStyle,
                                     ),
                                     Text(
-                                      widget.pegawai.nama,
+                                      widget.pegawai.nama + "!",
                                       style: userNameTextStyle,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
@@ -153,7 +145,7 @@ class _HomePageState extends State<HomePage> {
                                           child: Column(
                                         children: <Widget>[
                                           Text(
-                                            "07.30",
+                                            widget.details[0].time,
                                             style: TextStyle(
                                               fontSize: 25,
                                               color: Colors.white,
@@ -181,7 +173,7 @@ class _HomePageState extends State<HomePage> {
                                           child: Column(
                                         children: <Widget>[
                                           Text(
-                                            "16.30",
+                                            widget.details[1].time,
                                             style: TextStyle(
                                               fontSize: 25,
                                               color: Colors.white,
@@ -216,7 +208,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       StatistikTile(
                         screenWidth: screenWidth,
-                        title: "Telat",
+                        title: "Terlambat",
                         subTitle: "Absen lebih dari 7.30",
                         frequency: widget.stat.telatFreq,
                       ),
@@ -238,18 +230,32 @@ class _HomePageState extends State<HomePage> {
                         subTitle: "",
                         frequency: widget.stat.tugasFreq,
                       ),
-                      StatistikTile(
-                        screenWidth: screenWidth,
-                        title: "Tanpa Keterangan",
-                        subTitle: "",
-                        frequency: widget.stat.tanpaKeteranganFreq,
-                      ),
                     ],
                   ),
                 ),
               ],
             ),
-          )
+          ),
+          SizedBox(
+            height: kToolbarHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.dehaze,
+                    size: 20,
+                    color: Colors.black,
+                  ),
+                ),
+                Icon(
+                  Icons.search,
+                  color: primaryTextColor,
+                )
+              ],
+            ),
+          ),
         ],
       ),
     );
