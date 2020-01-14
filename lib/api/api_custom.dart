@@ -15,14 +15,6 @@ class ApiCustom {
     return http.get(baseUrl + lastUrl);
   }
 
-/*  static Future uploadImage(String fileName, String base64Image) {
-    var lastUrl = "upload_image.php";
-    return http.post("http://10.0.2.2/sikat/" + lastUrl, body: {
-      "image": base64Image,
-      "name": fileName,
-    });
-  }*/
-
   static Future getStatus() {
     var lastUrl = "status";
     return http.get(baseUrl + lastUrl);

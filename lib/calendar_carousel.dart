@@ -312,14 +312,14 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      IconButton(
+                      /*IconButton(
                         icon: Icon(Icons.dehaze,
                             size: widget.iconSize != null
                                 ? widget.iconSize
                                 : defaultIconSize,
                             color: widget.iconColor),
                         onPressed: widget.onPressedDrawer,
-                      ),
+                      ),*/
                       widget.bidang != null
                           ? Expanded(
                               child: Container(
@@ -345,10 +345,9 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                               flex: 2,
                             )
                           : Expanded(
-                              child: Container(
-                                width:
-                                    MediaQuery.of(context).size.width / 2 - 70,
-                                child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 16),
+                                child: Container(
                                   child: Text(
                                     widget.selectedPegawai.nama,
                                     maxLines: 1,
@@ -413,20 +412,18 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
     Widget homePage = HomePage(
       pegawai: widget.selectedPegawai,
-      stat: new Statistik(
-          cutiFreq: 4,
-          sakitFreq: 2,
-          tanpaKeteranganFreq: 1,
-          telatFreq: 0,
-          tugasFreq: 5),
+      stat: _generateStatistik(DateTime.now()),
       height: widget.height,
       details: _getAbsensiToday(DateTime.now()),
+      headerTextStyle: widget.headerTextStyle,
+      onPressedDrawer: widget.onPressedDrawer,
     );
 
     Widget akunPage = Container();
 
     if (_currentIndex == homePageIndex) {
       _currentPage = homePage;
+      _generateStatistik(DateTime.now());
     } else if (_currentIndex == calendarPageIndex) {
       _currentPage = calendarPage;
     } else {
@@ -530,12 +527,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 textAlign: TextAlign.center,
                 title: Text('Absensi'),
                 icon: Icon(Icons.calendar_today),
-                activeColor: widget.navItemColorActive,
-                inactiveColor: widget.navItemColorInactive),
-            BottomNavyBarItem(
-                textAlign: TextAlign.center,
-                title: Text('Akun'),
-                icon: Icon(Icons.account_circle),
                 activeColor: widget.navItemColorActive,
                 inactiveColor: widget.navItemColorInactive),
           ],
@@ -1019,18 +1010,14 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     List<Widget> tmp = [];
     for (int i = 0; i < details.length; i++) {
       Color bg;
-      int minute = details[i].dateTime.minute;
-      int hour = details[i].dateTime.hour;
-      int second = details[i].dateTime.second;
-      int milisec = hour * 3600 + minute * 60 + second;
       if (i == 0) {
-        if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600))) {
+        if (_isTelat(details[i])) {
           bg = widget.telatColor;
         } else {
           bg = widget.masukColor;
         }
       } else {
-        if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600))) {
+        if (_isPsw(details[i])) {
           bg = widget.telatColor;
         } else {
           bg = widget.pulangColor;
@@ -1397,5 +1384,71 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     }
 
     return tmp;
+  }
+
+  Statistik _generateStatistik(DateTime now) {
+    Statistik tmp = Statistik(tugasFreq: 0, telatFreq: 0, tanpaKeteranganFreq: 0, sakitFreq: 0, cutiFreq: 0);
+    for (int i = 1; i < now.day; i++) {
+      if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
+        if (widget.mapPegawaiEvent.maps[_selectedPegawai]
+                .getEvents(new DateTime(now.year, now.month, i))
+                .length !=
+            0) {
+          DetailAbsensi detailAbsensi = widget
+              .mapPegawaiEvent.maps[_selectedPegawai]
+              .getEvents(new DateTime(now.year, now.month, i))[0];
+          if (detailAbsensi.time != '-') {
+            if (_isTelat(detailAbsensi)) {
+              tmp.telatFreq++;
+            }
+          }
+        }
+      }
+
+      if (!widget.mapKeteranganEvent.isMapsNull(_selectedPegawai)) {
+        if (widget.mapKeteranganEvent.maps[_selectedPegawai]
+                .getEvents(new DateTime(now.year, now.month, i))
+                .length >
+            0) {
+          KeteranganAbsensi keteranganAbsensi = widget
+              .mapKeteranganEvent.maps[_selectedPegawai]
+              .getEvents(new DateTime(now.year, now.month, i))[0];
+          String s = keteranganAbsensi.status.id;
+          if (s == "1"){
+            tmp.sakitFreq++;
+          } else if((s == "2") | (s == "3") | (s == "4") | (s == "5") | (s == "6")){
+            tmp.cutiFreq++;
+          } else if ((s == "7") | (s == "8")){
+            tmp.tugasFreq++;
+          }
+        }
+      }
+    }
+
+    return tmp;
+  }
+
+  static bool _isTelat(DetailAbsensi detailAbsensi) {
+    int minute = detailAbsensi.dateTime.minute;
+    int hour = detailAbsensi.dateTime.hour;
+    int second = detailAbsensi.dateTime.second;
+    int milisec = hour * 3600 + minute * 60 + second;
+    if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600))) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  static bool _isPsw(DetailAbsensi detailAbsensi) {
+    int minute = detailAbsensi.dateTime.minute;
+    int hour = detailAbsensi.dateTime.hour;
+    int second = detailAbsensi.dateTime.second;
+    int milisec = hour * 3600 + minute * 60 + second;
+    if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600))) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

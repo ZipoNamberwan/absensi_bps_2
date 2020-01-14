@@ -14,12 +14,16 @@ class HomePage extends StatefulWidget {
   final List<DetailAbsensi> details;
   final Statistik stat;
   final double height;
+  final TextStyle headerTextStyle;
+  final onPressedDrawer;
 
   HomePage(
       {@required this.pegawai,
       @required this.stat,
       this.height,
-      @required this.details});
+      @required this.details,
+      this.headerTextStyle,
+      this.onPressedDrawer});
 
   @override
   _HomePageState createState() => new _HomePageState();
@@ -35,8 +39,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     //final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-
-/*    final logoHeight = screenHeight * 0.4;
+/*
+    final logoHeight = screenHeight * 0.4;
 
     const String logo = "images/bps.svg";*/
 
@@ -52,6 +56,7 @@ class _HomePageState extends State<HomePage> {
               logo,
               height: logoHeight,
               color: logoTintColor,
+              semanticsLabel: "Logo BPS",
             ),
           ),
         ),*/
@@ -113,19 +118,27 @@ class _HomePageState extends State<HomePage> {
                               const BorderRadius.all(Radius.circular(12)),
                           child: Padding(
                             padding: const EdgeInsets.only(
-                                left: 16.0,
-                                right: 16.0,
-                                top: 16.0,
-                                bottom: 16.0),
+                                left: 16.0, right: 16.0, top: 8, bottom: 16.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text(
                                       "Absensi Hari Ini ",
                                       style: hoursPlayedLabelTextStyle,
+                                    ),
+                                    Chip(
+                                      elevation: 2,
+                                      label: Text(
+                                        "10 Januari 2020",
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 12),
+                                      ),
+                                      backgroundColor: Colors.grey,
                                     ),
                                   ],
                                 ),
@@ -139,6 +152,13 @@ class _HomePageState extends State<HomePage> {
                                           MediaQuery.of(context).size.width / 3,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.grey,
+                                              blurRadius: 1,
+                                              offset:
+                                                  Offset.fromDirection(1, 1))
+                                        ],
                                         color: firstColor,
                                       ),
                                       child: Center(
@@ -167,6 +187,13 @@ class _HomePageState extends State<HomePage> {
                                           MediaQuery.of(context).size.width / 3,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.grey,
+                                              blurRadius: 1,
+                                              offset:
+                                                  Offset.fromDirection(1, 1))
+                                        ],
                                         color: secondColor,
                                       ),
                                       child: Center(
@@ -242,17 +269,24 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 IconButton(
-                  onPressed: () {},
+                  onPressed: widget.onPressedDrawer,
                   icon: Icon(
                     Icons.dehaze,
                     size: 20,
                     color: Colors.black,
                   ),
                 ),
-                Icon(
-                  Icons.search,
-                  color: primaryTextColor,
-                )
+                Expanded(
+                  child: Container(),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.more_vert,
+                    size: 20,
+                    color: Colors.black,
+                  ),
+                ),
               ],
             ),
           ),

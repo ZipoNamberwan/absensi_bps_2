@@ -80,7 +80,7 @@ TextStyle rankTextStyle = TextStyle(
 );
 
 TextStyle hoursPlayedLabelTextStyle = TextStyle(
-  fontSize: 12,
+  fontSize: 14,
   color: Colors.black,
   fontWeight: FontWeight.bold,
 );

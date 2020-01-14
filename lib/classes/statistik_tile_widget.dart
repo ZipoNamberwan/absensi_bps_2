@@ -1,4 +1,4 @@
-import 'package:absensi_bps_2/classes/ProgressWidget.dart';
+import 'package:absensi_bps_2/classes/progress_widget.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -36,8 +36,9 @@ class StatistikTile extends StatelessWidget {
             ),
           ),
           Expanded(
-            child:
-                ProgressWidget(screenWidth: screenWidth, progress: _convertFreqToPercent(frequency)),
+            child: ProgressWidget(
+                screenWidth: screenWidth,
+                progress: _convertFreqToPercent(frequency)),
           ),
           Padding(
             padding: const EdgeInsets.only(left: 15),
@@ -46,11 +47,22 @@ class StatistikTile extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   '$frequency',
-                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
-              decoration:
-                  BoxDecoration(shape: BoxShape.circle, color: Colors.black87),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black87,
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.grey,
+                      blurRadius: 2,
+                      offset: Offset.fromDirection(2, 2))
+                ],
+              ),
             ),
           ),
         ],
