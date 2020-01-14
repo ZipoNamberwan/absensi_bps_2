@@ -451,12 +451,12 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                         left: 16, right: 16, top: 8, bottom: 16),
                     child: widget.keterangan.length == 0
                         ? _showImage()
-                        : _initialImagePath != ''
+                        : ((_initialImagePath != '') & (_initialImagePath != null))
                             ? Container(
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Image.network(_initialImagePath,
-                                      height: _imageHeight, fit: BoxFit.cover),
+                                      height: _imageHeight, fit: BoxFit.cover, semanticLabel: "image",),
                                 ),
                               )
                             : Padding(

@@ -4,23 +4,28 @@ import 'package:flutter/material.dart';
 class ProgressWidget extends StatefulWidget {
   final double progress, screenWidth;
 
-  const ProgressWidget({Key key, this.progress, this.screenWidth}) : super(key: key);
+  const ProgressWidget(
+      {Key key, this.progress, this.screenWidth,})
+      : super(key: key);
 
   @override
   _ProgressWidgetState createState() => _ProgressWidgetState();
 }
 
-class _ProgressWidgetState extends State<ProgressWidget> with SingleTickerProviderStateMixin {
-
+class _ProgressWidgetState extends State<ProgressWidget>
+    with SingleTickerProviderStateMixin {
   AnimationController controller;
   Animation<double> progressAnimation;
 
   @override
   void initState() {
     super.initState();
-    controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-    progressAnimation = Tween<double>(begin: 0, end: widget.screenWidth * 0.33 * widget.progress).animate(controller);
-    controller.forward();
+    controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1500));
+    progressAnimation = Tween<double>(
+            begin: 0, end: widget.screenWidth * 0.33 * widget.progress)
+        .animate(controller);
+    controller.forward().orCancel;
   }
 
   @override
@@ -32,7 +37,6 @@ class _ProgressWidgetState extends State<ProgressWidget> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final width = widget.screenWidth * 0.33;
-
     return AnimatedBuilder(
       animation: progressAnimation,
       builder: (context, widget) {
@@ -51,8 +55,7 @@ class _ProgressWidgetState extends State<ProgressWidget> with SingleTickerProvid
               height: 10,
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(4)),
-                  gradient: appGradient
-              ),
+                  gradient: appGradient),
             ),
           ],
         );

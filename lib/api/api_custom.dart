@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 
 import '../classes/post_keterangan_absensi.dart';
 
-const baseUrl = "http://10.0.2.2/apiabsensi/index.php/";
-//const baseUrl = "http://bpsnttapp.com/apiabsensi/index.php/";
+//const baseUrl = "http://10.0.2.2/apiabsensi/index.php/";
+const baseUrl = "http://bpsnttapp.com/apiabsensi/index.php/";
 
 String uploadEndPoint = '';
 

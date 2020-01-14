@@ -213,6 +213,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   Widget _currentPage;
   AnimationController _fadeAnimationController;
   Animation<double> _fadeAnimation;
+  bool _isAbsensiFirstMonthLoaded = false;
+  bool _isKeteranganFirstMonthLoaded = false;
 
   /// When FIRSTDAYOFWEEK is 0 in dart-intl, it represents Monday. However it is the second day in the arrays of Weekdays.
   /// Therefore we need to add 1 modulo 7 to pick the right weekday from intl. (cf. [GlobalMaterialLocalizations])
@@ -410,9 +412,11 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       ),
     );
 
+    Statistik s = _generateStatistik(DateTime.now());
+
     Widget homePage = HomePage(
       pegawai: widget.selectedPegawai,
-      stat: _generateStatistik(DateTime.now()),
+      stat: s,
       height: widget.height,
       details: _getAbsensiToday(DateTime.now()),
       headerTextStyle: widget.headerTextStyle,
@@ -423,7 +427,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
     if (_currentIndex == homePageIndex) {
       _currentPage = homePage;
-      _generateStatistik(DateTime.now());
     } else if (_currentIndex == calendarPageIndex) {
       _currentPage = calendarPage;
     } else {
@@ -1103,12 +1106,13 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
             }
           }
         }
-
+        return true;
+      }).whenComplete(() {
         setState(() {
           _isDetailLoading = false;
           _isReloadSelectedDate = false;
+          _isAbsensiFirstMonthLoaded = true;
         });
-        return true;
       });
     }
     return false;
@@ -1221,7 +1225,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
         _getDetailAbsensi(_selectedPegawai, _dates[1]);
         _getKeteranganAbsensi(_selectedPegawai, _dates[1]);
-
+      }).whenComplete(() {
         setState(() {
           _isListPegawaiLoading = false;
           _isReloadSelectedDate = false;
@@ -1280,9 +1284,11 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         if (_mapKeterangan.events != null) {
           widget.mapKeteranganEvent.add(_selectedPegawai, _mapKeterangan);
         }
+      }).whenComplete(() {
         setState(() {
           _isKeteranganLoading = false;
           _isReloadSelectedDate = false;
+          _isKeteranganFirstMonthLoaded = true;
         });
       });
     }
@@ -1387,8 +1393,16 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   }
 
   Statistik _generateStatistik(DateTime now) {
-    Statistik tmp = Statistik(tugasFreq: 0, telatFreq: 0, tanpaKeteranganFreq: 0, sakitFreq: 0, cutiFreq: 0);
-    for (int i = 1; i < now.day; i++) {
+    var lastDayDateTime = (now.month < 12)
+        ? new DateTime(now.year, now.month + 1, 0)
+        : new DateTime(now.year + 1, 1, 0);
+    Statistik tmp = Statistik(
+        tugasFreq: 0,
+        telatFreq: 0,
+        tanpaKeteranganFreq: 0,
+        sakitFreq: 0,
+        cutiFreq: 0);
+    for (int i = 1; i < lastDayDateTime.day; i++) {
       if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
         if (widget.mapPegawaiEvent.maps[_selectedPegawai]
                 .getEvents(new DateTime(now.year, now.month, i))
@@ -1414,11 +1428,15 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
               .mapKeteranganEvent.maps[_selectedPegawai]
               .getEvents(new DateTime(now.year, now.month, i))[0];
           String s = keteranganAbsensi.status.id;
-          if (s == "1"){
+          if (s == "1") {
             tmp.sakitFreq++;
-          } else if((s == "2") | (s == "3") | (s == "4") | (s == "5") | (s == "6")){
+          } else if ((s == "2") |
+              (s == "3") |
+              (s == "4") |
+              (s == "5") |
+              (s == "6")) {
             tmp.cutiFreq++;
-          } else if ((s == "7") | (s == "8")){
+          } else if ((s == "7") | (s == "8")) {
             tmp.tugasFreq++;
           }
         }

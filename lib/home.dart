@@ -23,7 +23,7 @@ class HomePage extends StatefulWidget {
       this.height,
       @required this.details,
       this.headerTextStyle,
-      this.onPressedDrawer});
+      this.onPressedDrawer,});
 
   @override
   _HomePageState createState() => new _HomePageState();
