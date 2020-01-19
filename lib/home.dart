@@ -4,10 +4,13 @@ import 'package:absensi_bps_2/src/color.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'classes/detail_absensi.dart';
 import 'classes/keterangan_absensi.dart';
 import 'classes/rounded_image_widget.dart';
+import 'classes/shared_preference.dart';
+import 'login/login.dart';
 
 class HomePage extends StatefulWidget {
   final Pegawai pegawai;
@@ -17,13 +20,14 @@ class HomePage extends StatefulWidget {
   final TextStyle headerTextStyle;
   final onPressedDrawer;
 
-  HomePage(
-      {@required this.pegawai,
-      @required this.stat,
-      this.height,
-      @required this.details,
-      this.headerTextStyle,
-      this.onPressedDrawer,});
+  HomePage({
+    @required this.pegawai,
+    @required this.stat,
+    this.height,
+    @required this.details,
+    this.headerTextStyle,
+    this.onPressedDrawer,
+  });
 
   @override
   _HomePageState createState() => new _HomePageState();
@@ -134,7 +138,7 @@ class _HomePageState extends State<HomePage> {
                                     Chip(
                                       elevation: 2,
                                       label: Text(
-                                        "10 Januari 2020",
+                                        DateFormat.yMMMMd("id").format(DateTime.now()),
                                         style: TextStyle(
                                             color: Colors.white, fontSize: 12),
                                       ),
@@ -233,30 +237,38 @@ class _HomePageState extends State<HomePage> {
                           style: headingOneTextStyle,
                         ),
                       ),
-                      StatistikTile(
-                        screenWidth: screenWidth,
-                        title: "Terlambat",
-                        subTitle: "Absen lebih dari 7.30",
-                        frequency: widget.stat.telatFreq,
-                      ),
-                      StatistikTile(
-                        screenWidth: screenWidth,
-                        title: "Sakit",
-                        subTitle: "",
-                        frequency: widget.stat.sakitFreq,
-                      ),
-                      StatistikTile(
-                        screenWidth: screenWidth,
-                        title: "Cuti",
-                        subTitle: "",
-                        frequency: widget.stat.cutiFreq,
-                      ),
-                      StatistikTile(
-                        screenWidth: screenWidth,
-                        title: "Tugas",
-                        subTitle: "",
-                        frequency: widget.stat.tugasFreq,
-                      ),
+                      widget.stat.telatFreq == null
+                          ? Container()
+                          : StatistikTile(
+                              screenWidth: screenWidth,
+                              title: "Terlambat",
+                              subTitle: "Absen lebih dari 7.30",
+                              frequency: widget.stat.telatFreq,
+                            ),
+                      widget.stat.cutiFreq == null
+                          ? Container()
+                          : StatistikTile(
+                              screenWidth: screenWidth,
+                              title: "Cuti",
+                              subTitle: "",
+                              frequency: widget.stat.cutiFreq,
+                            ),
+                      widget.stat.tugasFreq == null
+                          ? Container()
+                          : StatistikTile(
+                              screenWidth: screenWidth,
+                              title: "Tugas",
+                              subTitle: "",
+                              frequency: widget.stat.tugasFreq,
+                            ),
+                      widget.stat.sakitFreq == null
+                          ? Container()
+                          : StatistikTile(
+                              screenWidth: screenWidth,
+                              title: "Sakit",
+                              subTitle: "",
+                              frequency: widget.stat.sakitFreq,
+                            ),
                     ],
                   ),
                 ),
@@ -265,29 +277,38 @@ class _HomePageState extends State<HomePage> {
           ),
           SizedBox(
             height: kToolbarHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                IconButton(
-                  onPressed: widget.onPressedDrawer,
-                  icon: Icon(
-                    Icons.dehaze,
-                    size: 20,
-                    color: Colors.black,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  IconButton(
+                    onPressed: widget.onPressedDrawer,
+                    icon: Icon(
+                      Icons.dehaze,
+                      size: 20,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Container(),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.more_vert,
-                    size: 20,
-                    color: Colors.black,
+                  Expanded(
+                    child: Container(),
                   ),
-                ),
-              ],
+                  IconButton(
+                    onPressed: () {
+                      SavedPreference.removeAll();
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                          (Route<dynamic> route) => false);
+                    },
+                    icon: Icon(
+                      Icons.exit_to_app,
+                      size: 20,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

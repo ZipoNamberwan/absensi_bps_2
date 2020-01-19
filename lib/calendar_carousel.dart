@@ -19,11 +19,9 @@ import 'package:absensi_bps_2/api/api_custom.dart';
 import 'dart:convert';
 
 import 'classes/keterangan_absensi.dart';
-import 'classes/shared_preference.dart';
 import 'classes/statistik.dart';
 import 'detail_absensi_page.dart';
 import 'home.dart';
-import 'login/login.dart';
 
 class CalendarCarousel<T> extends StatefulWidget {
   final double viewportFraction;
@@ -306,22 +304,14 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       child: Column(
         children: <Widget>[
           SizedBox(
-              height: widget.headerHeight,
-              child: Container(
-                  child: Stack(
+            height: widget.headerHeight,
+            child: Container(
+              child: Stack(
                 children: <Widget>[
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      /*IconButton(
-                        icon: Icon(Icons.dehaze,
-                            size: widget.iconSize != null
-                                ? widget.iconSize
-                                : defaultIconSize,
-                            color: widget.iconColor),
-                        onPressed: widget.onPressedDrawer,
-                      ),*/
                       widget.bidang != null
                           ? Expanded(
                               child: Container(
@@ -382,7 +372,9 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     ],
                   ),
                 ],
-              ))),
+              ),
+            ),
+          ),
           WeekdayRow(
             firstDayOfWeek,
             showWeekdays: widget.showWeekDays,
@@ -412,128 +404,105 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       ),
     );
 
-    Statistik s = _generateStatistik(DateTime.now());
+    Widget homePage;
 
-    Widget homePage = HomePage(
-      pegawai: widget.selectedPegawai,
-      stat: s,
-      height: widget.height,
-      details: _getAbsensiToday(DateTime.now()),
-      headerTextStyle: widget.headerTextStyle,
-      onPressedDrawer: widget.onPressedDrawer,
-    );
+    Widget akunPage;
 
-    Widget akunPage = Container();
+    if (widget.bidang == null) {
+      homePage = HomePage(
+        pegawai: widget.selectedPegawai,
+        stat: _generateStatistik(DateTime.now()),
+        height: widget.height,
+        details: _getAbsensiToday(DateTime.now()),
+        headerTextStyle: widget.headerTextStyle,
+        onPressedDrawer: widget.onPressedDrawer,
+      );
 
-    if (_currentIndex == homePageIndex) {
-      _currentPage = homePage;
-    } else if (_currentIndex == calendarPageIndex) {
-      _currentPage = calendarPage;
-    } else {
-      _currentPage = akunPage;
+      akunPage = Container();
+
+      if (_currentIndex == homePageIndex) {
+        _currentPage = homePage;
+      } else if (_currentIndex == calendarPageIndex) {
+        _currentPage = calendarPage;
+      } else {
+        _currentPage = akunPage;
+      }
     }
 
-    return Scaffold(
-        drawer: Drawer(
-          child: Stack(
-            children: <Widget>[
-              ListView(
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  widget.selectedPegawai != null
-                      ? Container()
-                      : Container(
-                          height: 200,
-                          decoration: BoxDecoration(color: Colors.grey[350]),
-                          child: Center(
-                            child: Text(
-                              widget.bidang.namabidang,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 30),
-                            ),
-                          ),
-                        ),
+    return widget.bidang != null
+        ? Scaffold(
+            body: Container(
+                margin:
+                    EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                child: calendarPage),
+            key: widget.scaffoldKey,
+          )
+        : Scaffold(
+            drawer: Drawer(
+              child: _createDrawer(),
+            ),
+            key: widget.scaffoldKey,
+            body: SingleChildScrollView(
+              child:
+                  //custom icon
                   Container(
-                    padding: EdgeInsets.all(10),
-                    child: RaisedButton(
-                      onPressed: () {
-                        SavedPreference.removeAll();
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LoginPage()),
-                            (Route<dynamic> route) => false);
-                      },
-                      child: Text("Sign Out"),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        key: widget.scaffoldKey,
-        body: SingleChildScrollView(
-          child:
-              //custom icon
-              Container(
-            margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-            child: Opacity(
-              child: Stack(
-                children: <Widget>[
-                  Column(
+                margin:
+                    EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                child: Opacity(
+                  child: Stack(
                     children: <Widget>[
-                      SizedBox(
-                        height: widget.headerHeight,
-                        child: Container(),
+                      Column(
+                        children: <Widget>[
+                          SizedBox(
+                            height: widget.headerHeight,
+                            child: Container(),
+                          ),
+                          (_isDetailLoading |
+                                  _isListPegawaiLoading |
+                                  _isKeteranganLoading)
+                              ? Align(
+                                  child: LinearProgressIndicator(),
+                                  alignment: Alignment.bottomCenter,
+                                )
+                              : Container(),
+                        ],
                       ),
-                      (_isDetailLoading |
-                              _isListPegawaiLoading |
-                              _isKeteranganLoading)
-                          ? Align(
-                              child: LinearProgressIndicator(),
-                              alignment: Alignment.bottomCenter,
-                            )
-                          : Container(),
+                      _currentPage
                     ],
                   ),
-                  _currentPage
-                ],
+                  opacity: _fadeAnimation.value,
+                ),
               ),
-              opacity: _fadeAnimation.value,
             ),
-          ),
-        ),
-        bottomNavigationBar: BottomNavyBar(
-          showElevation: true,
-          itemCornerRadius: 15,
-          curve: Curves.easeIn,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          selectedIndex: _currentIndex,
-          onItemSelected: (index) {
-            //_fadeAnimationController.reset();
-            setState(() => _currentIndex = index);
-            if (_fadeAnimation.status == AnimationStatus.completed) {
-              _fadeAnimationController.reset();
-            }
-            _fadeAnimationController.forward().orCancel;
-          },
-          items: <BottomNavyBarItem>[
-            BottomNavyBarItem(
-                textAlign: TextAlign.center,
-                title: Text('Home'),
-                icon: Icon(Icons.home),
-                activeColor: widget.navItemColorActive,
-                inactiveColor: widget.navItemColorInactive),
-            BottomNavyBarItem(
-                textAlign: TextAlign.center,
-                title: Text('Absensi'),
-                icon: Icon(Icons.calendar_today),
-                activeColor: widget.navItemColorActive,
-                inactiveColor: widget.navItemColorInactive),
-          ],
-        ));
+            bottomNavigationBar: BottomNavyBar(
+              showElevation: true,
+              itemCornerRadius: 15,
+              curve: Curves.easeIn,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              selectedIndex: _currentIndex,
+              onItemSelected: (index) {
+                //_fadeAnimationController.reset();
+                setState(() => _currentIndex = index);
+                if (_fadeAnimation.status == AnimationStatus.completed) {
+                  _fadeAnimationController.reset();
+                }
+                _fadeAnimationController.forward().orCancel;
+              },
+              items: <BottomNavyBarItem>[
+                BottomNavyBarItem(
+                    textAlign: TextAlign.center,
+                    title: Text('Home'),
+                    icon: Icon(Icons.home),
+                    activeColor: widget.navItemColorActive,
+                    inactiveColor: widget.navItemColorInactive),
+                BottomNavyBarItem(
+                    textAlign: TextAlign.center,
+                    title: Text('Absensi'),
+                    icon: Icon(Icons.date_range),
+                    activeColor: widget.navItemColorActive,
+                    inactiveColor: widget.navItemColorInactive),
+              ],
+            ));
   }
 
   AnimatedBuilder builder(int slideIndex) {
@@ -1397,11 +1366,11 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         ? new DateTime(now.year, now.month + 1, 0)
         : new DateTime(now.year + 1, 1, 0);
     Statistik tmp = Statistik(
-        tugasFreq: 0,
-        telatFreq: 0,
-        tanpaKeteranganFreq: 0,
-        sakitFreq: 0,
-        cutiFreq: 0);
+        cutiFreq: null,
+        sakitFreq: null,
+        tanpaKeteranganFreq: null,
+        telatFreq: null,
+        tugasFreq: null);
     for (int i = 1; i < lastDayDateTime.day; i++) {
       if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
         if (widget.mapPegawaiEvent.maps[_selectedPegawai]
@@ -1413,6 +1382,9 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
               .getEvents(new DateTime(now.year, now.month, i))[0];
           if (detailAbsensi.time != '-') {
             if (_isTelat(detailAbsensi)) {
+              if (tmp.telatFreq == null) {
+                tmp.telatFreq = 0;
+              }
               tmp.telatFreq++;
             }
           }
@@ -1424,10 +1396,17 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 .getEvents(new DateTime(now.year, now.month, i))
                 .length >
             0) {
+          if (tmp.sakitFreq == null) {
+            tmp.sakitFreq = 0;
+            tmp.tanpaKeteranganFreq = 0;
+            tmp.tugasFreq = 0;
+            tmp.cutiFreq = 0;
+          }
           KeteranganAbsensi keteranganAbsensi = widget
               .mapKeteranganEvent.maps[_selectedPegawai]
               .getEvents(new DateTime(now.year, now.month, i))[0];
           String s = keteranganAbsensi.status.id;
+
           if (s == "1") {
             tmp.sakitFreq++;
           } else if ((s == "2") |
@@ -1468,5 +1447,90 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     } else {
       return false;
     }
+  }
+
+  Widget _createDrawer() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              "Created by Team IPD",
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(8),
+            child: Text(
+              "Absensi BPS Provinsi NTT",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18),
+            ),
+            decoration: BoxDecoration(
+                color: Color.fromRGBO(55, 95, 255, 100),
+                borderRadius: BorderRadius.circular(8)),
+          ),
+          SizedBox(
+            width: 150,
+            height: 150,
+            child: Image.asset(
+              "images/ic_launcher.png",
+              semanticLabel: "logo",
+              fit: BoxFit.fill,
+            ),
+          ),
+          Text(
+            "Version 2.0",
+            style: TextStyle(fontSize: 12),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              "Copyright © 2020",
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              "Badan Pusat Statistik Provinsi Nusa Tenggara Timur",
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              "All rights Reserved",
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

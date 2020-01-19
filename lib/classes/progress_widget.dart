@@ -30,8 +30,8 @@ class _ProgressWidgetState extends State<ProgressWidget>
 
   @override
   void dispose() {
-    super.dispose();
     controller.dispose();
+    super.dispose();
   }
 
   @override

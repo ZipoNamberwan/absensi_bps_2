@@ -233,6 +233,12 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
                               color: getAbsenMasukColor(),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.grey,
+                                    blurRadius: 1,
+                                    offset: Offset.fromDirection(1, 1))
+                              ],
                             ),
                             child: Center(
                                 child: Column(
@@ -260,6 +266,12 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
                               color: getAbsenPulangColor(),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.grey,
+                                    blurRadius: 1,
+                                    offset: Offset.fromDirection(1, 1))
+                              ],
                             ),
                             child: Center(
                                 child: Column(
@@ -446,17 +458,22 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                           ),
                         )
                       : Container(),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 16, right: 16, top: 8, bottom: 16),
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: 16, right: 16, bottom: 16, top: 8),
                     child: widget.keterangan.length == 0
                         ? _showImage()
-                        : ((_initialImagePath != '') & (_initialImagePath != null))
+                        : ((_initialImagePath != '') &
+                                (_initialImagePath != null))
                             ? Container(
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 8),
-                                  child: Image.network(_initialImagePath,
-                                      height: _imageHeight, fit: BoxFit.cover, semanticLabel: "image",),
+                                  child: Image.network(
+                                    _initialImagePath,
+                                    height: _imageHeight,
+                                    fit: BoxFit.cover,
+                                    semanticLabel: "image",
+                                  ),
                                 ),
                               )
                             : Padding(
@@ -535,19 +552,15 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
             null != snapshot.data) {
           _tmpFile = snapshot.data;
           _base64Image = base64Encode(snapshot.data.readAsBytesSync());
-          return Stack(
-            children: <Widget>[
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                height: _imageHeight,
-                child: Image.file(
-                  snapshot.data,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ],
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            height: _imageHeight,
+            child: Image.file(
+              snapshot.data,
+              fit: BoxFit.cover,
+            ),
           );
         } else if (null != snapshot.error) {
           return const Text(

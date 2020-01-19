@@ -81,6 +81,18 @@ class _AbsensiPageState extends State<AbsensiPage>
   @override
   Widget build(BuildContext context) {
     /// Example with custom icon
+    double height;
+
+    if (widget.bidang != null) {
+      height = MediaQuery.of(context).size.height -
+          MediaQuery.of(context).padding.bottom -
+          MediaQuery.of(context).padding.top;
+    } else {
+      height = MediaQuery.of(context).size.height -
+          MediaQuery.of(context).padding.bottom -
+          MediaQuery.of(context).padding.top -
+          kBottomNavigationBarHeight;
+    }
 
     _calendarCarousel = CalendarCarousel<DetailAbsensi>(
       thisMonthDayBorderColor: Colors.grey,
@@ -100,10 +112,7 @@ class _AbsensiPageState extends State<AbsensiPage>
       eventTextStyle: TextStyle(color: Colors.white, fontSize: 10),
       iconColor: Colors.black,
       weekFormat: false,
-      height: MediaQuery.of(context).size.height -
-          MediaQuery.of(context).padding.bottom -
-          MediaQuery.of(context).padding.top -
-          kBottomNavigationBarHeight,
+      height: height,
       width: MediaQuery.of(context).size.width,
       customGridViewPhysics: NeverScrollableScrollPhysics(),
       weekdayRowHeight: 40,
