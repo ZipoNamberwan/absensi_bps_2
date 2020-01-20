@@ -19,9 +19,11 @@ import 'package:absensi_bps_2/api/api_custom.dart';
 import 'dart:convert';
 
 import 'classes/keterangan_absensi.dart';
+import 'classes/shared_preference.dart';
 import 'classes/statistik.dart';
 import 'detail_absensi_page.dart';
 import 'home.dart';
+import 'login/login.dart';
 
 class CalendarCarousel<T> extends StatefulWidget {
   final double viewportFraction;
@@ -313,6 +315,12 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
                       widget.bidang != null
+                          ? IconButton(
+                              icon: Icon(Icons.dehaze),
+                              iconSize: widget.iconSize,
+                              onPressed: widget.onPressedDrawer)
+                          : Container(),
+                      widget.bidang != null
                           ? Expanded(
                               child: Container(
                                 child: DropdownButton<String>(
@@ -431,10 +439,35 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
     return widget.bidang != null
         ? Scaffold(
-            body: Container(
-                margin:
-                    EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                child: calendarPage),
+            drawer: Drawer(
+              child: _createDrawer(),
+            ),
+            body: Stack(
+              children: <Widget>[
+                Column(
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.only(
+                          top: MediaQuery.of(context).padding.top),
+                      height: widget.headerHeight,
+                      child: Container(),
+                    ),
+                    (_isDetailLoading |
+                            _isListPegawaiLoading |
+                            _isKeteranganLoading)
+                        ? Align(
+                            child: LinearProgressIndicator(),
+                            alignment: Alignment.bottomCenter,
+                          )
+                        : Container(),
+                  ],
+                ),
+                Container(
+                    margin: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top),
+                    child: calendarPage)
+              ],
+            ),
             key: widget.scaffoldKey,
           )
         : Scaffold(
@@ -502,7 +535,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     activeColor: widget.navItemColorActive,
                     inactiveColor: widget.navItemColorInactive),
               ],
-            ));
+            ),
+          );
   }
 
   AnimatedBuilder builder(int slideIndex) {
@@ -1450,87 +1484,107 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   }
 
   Widget _createDrawer() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              "Created by Team IPD",
+    if (widget.bidang != null) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[
+            RaisedButton(
+              onPressed: () {
+                SavedPreference.removeAll();
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                        (Route<dynamic> route) => false);
+              },
+              child: Text("SIGN OUT"),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                "Created by Team IPD",
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(8),
+              child: Text(
+                "Absensi BPS Provinsi NTT",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
+              ),
+              decoration: BoxDecoration(
+                  color: Color.fromRGBO(55, 95, 255, 100),
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+            SizedBox(
+              width: 150,
+              height: 150,
+              child: Image.asset(
+                "images/ic_launcher.png",
+                semanticLabel: "logo",
+                fit: BoxFit.fill,
+              ),
+            ),
+            Text(
+              "Version 2.0",
               style: TextStyle(fontSize: 12),
             ),
-          ),
-          Container(
-            padding: EdgeInsets.all(8),
-            child: Text(
-              "Absensi BPS Provinsi NTT",
-              style: TextStyle(
-                  color: Colors.white,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                "Copyright © 2020",
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18),
-            ),
-            decoration: BoxDecoration(
-                color: Color.fromRGBO(55, 95, 255, 100),
-                borderRadius: BorderRadius.circular(8)),
-          ),
-          SizedBox(
-            width: 150,
-            height: 150,
-            child: Image.asset(
-              "images/ic_launcher.png",
-              semanticLabel: "logo",
-              fit: BoxFit.fill,
-            ),
-          ),
-          Text(
-            "Version 2.0",
-            style: TextStyle(fontSize: 12),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              "Copyright © 2020",
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              "Badan Pusat Statistik Provinsi Nusa Tenggara Timur",
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                "Badan Pusat Statistik Provinsi Nusa Tenggara Timur",
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              "All rights Reserved",
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-                fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                "All rights Reserved",
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
   }
 }

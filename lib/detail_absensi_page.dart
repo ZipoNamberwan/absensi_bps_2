@@ -473,6 +473,10 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                                     height: _imageHeight,
                                     fit: BoxFit.cover,
                                     semanticLabel: "image",
+                                    loadingBuilder: (context, widget, chunk) {
+                                      if (chunk == null) return widget;
+                                      return LinearProgressIndicator();
+                                    },
                                   ),
                                 ),
                               )

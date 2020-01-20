@@ -31,6 +31,10 @@ class RoundedImageWidget extends StatelessWidget {
                   child: ClipOval(
                     child: Image.network(
                       imagePath,
+                      loadingBuilder: (context, widget, chunk){
+                        if (chunk == null) return widget;
+                        return CircularProgressIndicator();
+                      },
                       fit: BoxFit.cover,
                     ),
                   ),
