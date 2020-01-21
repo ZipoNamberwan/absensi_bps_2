@@ -213,8 +213,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   Widget _currentPage;
   AnimationController _fadeAnimationController;
   Animation<double> _fadeAnimation;
-  bool _isAbsensiFirstMonthLoaded = false;
-  bool _isKeteranganFirstMonthLoaded = false;
 
   /// When FIRSTDAYOFWEEK is 0 in dart-intl, it represents Monday. However it is the second day in the arrays of Weekdays.
   /// Therefore we need to add 1 modulo 7 to pick the right weekday from intl. (cf. [GlobalMaterialLocalizations])
@@ -1114,7 +1112,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         setState(() {
           _isDetailLoading = false;
           _isReloadSelectedDate = false;
-          _isAbsensiFirstMonthLoaded = true;
         });
       });
     }
@@ -1291,7 +1288,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         setState(() {
           _isKeteranganLoading = false;
           _isReloadSelectedDate = false;
-          _isKeteranganFirstMonthLoaded = true;
         });
       });
     }

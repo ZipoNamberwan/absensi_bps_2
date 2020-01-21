@@ -1,5 +1,6 @@
 import 'package:absensi_bps_2/classes/statistik.dart';
 import 'package:absensi_bps_2/classes/statistik_tile_widget.dart';
+import 'package:absensi_bps_2/classes/statistik_tile_widget_empty.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:flutter/cupertino.dart';
@@ -138,7 +139,8 @@ class _HomePageState extends State<HomePage> {
                                     Chip(
                                       elevation: 2,
                                       label: Text(
-                                        DateFormat.yMMMMd("id").format(DateTime.now()),
+                                        DateFormat.yMMMMd("id")
+                                            .format(DateTime.now()),
                                         style: TextStyle(
                                             color: Colors.white, fontSize: 12),
                                       ),
@@ -238,7 +240,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       widget.stat.telatFreq == null
-                          ? Container()
+                          ? StatistikTileEmpty(
+                              screenWidth: screenWidth,
+                              title: "Terlambat",
+                              subTitle: "Absen lebih dari 7.30",
+                            )
                           : StatistikTile(
                               screenWidth: screenWidth,
                               title: "Terlambat",
@@ -246,7 +252,11 @@ class _HomePageState extends State<HomePage> {
                               frequency: widget.stat.telatFreq,
                             ),
                       widget.stat.cutiFreq == null
-                          ? Container()
+                          ? StatistikTileEmpty(
+                              screenWidth: screenWidth,
+                              title: "Cuti",
+                              subTitle: "",
+                            )
                           : StatistikTile(
                               screenWidth: screenWidth,
                               title: "Cuti",
@@ -254,7 +264,11 @@ class _HomePageState extends State<HomePage> {
                               frequency: widget.stat.cutiFreq,
                             ),
                       widget.stat.tugasFreq == null
-                          ? Container()
+                          ? StatistikTileEmpty(
+                              screenWidth: screenWidth,
+                              title: "Tugas",
+                              subTitle: "",
+                            )
                           : StatistikTile(
                               screenWidth: screenWidth,
                               title: "Tugas",
@@ -262,7 +276,11 @@ class _HomePageState extends State<HomePage> {
                               frequency: widget.stat.tugasFreq,
                             ),
                       widget.stat.sakitFreq == null
-                          ? Container()
+                          ? StatistikTileEmpty(
+                              screenWidth: screenWidth,
+                              title: "Sakit",
+                              subTitle: "",
+                            )
                           : StatistikTile(
                               screenWidth: screenWidth,
                               title: "Sakit",
