@@ -1108,6 +1108,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           }
         }
         return true;
+      }).catchError((error) {
+        _showSnackBar("Gagal Mengambil data absensi");
       }).whenComplete(() {
         setState(() {
           _isDetailLoading = false;
@@ -1225,6 +1227,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
         _getDetailAbsensi(_selectedPegawai, _dates[1]);
         _getKeteranganAbsensi(_selectedPegawai, _dates[1]);
+      }).catchError((error) {
+        _showSnackBar("Gagal mengambil data pegawai");
       }).whenComplete(() {
         setState(() {
           _isListPegawaiLoading = false;
@@ -1284,6 +1288,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         if (_mapKeterangan.events != null) {
           widget.mapKeteranganEvent.add(_selectedPegawai, _mapKeterangan);
         }
+      }).catchError((error) {
+        _showSnackBar("Gagal mengambil data keterangan absensi");
       }).whenComplete(() {
         setState(() {
           _isKeteranganLoading = false;
@@ -1491,7 +1497,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => LoginPage()),
-                        (Route<dynamic> route) => false);
+                    (Route<dynamic> route) => false);
               },
               child: Text("SIGN OUT"),
             ),
