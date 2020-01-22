@@ -264,7 +264,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         parent: _animationAfterPostController, curve: Curves.easeOut);
 
     _fadeAnimationController = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 1000));
+        vsync: this, duration: Duration(milliseconds: 500));
 
     _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
         parent: _fadeAnimationController, curve: Curves.easeIn));
@@ -1126,7 +1126,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       var lastDayDateTime = (dateTime.month < 12)
           ? new DateTime(dateTime.year, dateTime.month + 1, 0)
           : new DateTime(dateTime.year + 1, 1, 0);
-      for (int i = 1; i < lastDayDateTime.day; i++) {
+      for (int i = 1; i <= lastDayDateTime.day; i++) {
         if (widget.mapPegawaiEvent.maps[_selectedPegawai]
                 .getEvents(new DateTime(dateTime.year, dateTime.month, i))
                 .length !=
@@ -1305,7 +1305,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       var lastDayDateTime = (dateTime.month < 12)
           ? new DateTime(dateTime.year, dateTime.month + 1, 0)
           : new DateTime(dateTime.year + 1, 1, 0);
-      for (int i = 1; i < lastDayDateTime.day; i++) {
+      for (int i = 1; i <= lastDayDateTime.day; i++) {
         if (widget.mapKeteranganEvent.maps[_selectedPegawai]
                 .getEvents(new DateTime(dateTime.year, dateTime.month, i))
                 .length >
@@ -1407,7 +1407,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         tanpaKeteranganFreq: null,
         telatFreq: null,
         tugasFreq: null);
-    for (int i = 1; i < lastDayDateTime.day; i++) {
+    for (int i = 1; i <= lastDayDateTime.day; i++) {
       if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
         if (widget.mapPegawaiEvent.maps[_selectedPegawai]
                 .getEvents(new DateTime(now.year, now.month, i))

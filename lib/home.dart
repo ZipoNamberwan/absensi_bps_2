@@ -313,11 +313,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   IconButton(
                     onPressed: () {
-                      SavedPreference.removeAll();
-                      Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginPage()),
-                          (Route<dynamic> route) => false);
+                      _showLogoutDialog();
                     },
                     icon: Icon(
                       Icons.exit_to_app,
@@ -332,5 +328,37 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  void _logout() {
+    SavedPreference.removeAll();
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+        (Route<dynamic> route) => false);
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Sign Out?"),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () {
+                  _logout();
+                },
+                child: Text("Ya"),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Tidak"),
+              ),
+            ],
+          );
+        });
   }
 }
