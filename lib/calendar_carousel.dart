@@ -263,8 +263,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _animationAfterPost = CurvedAnimation(
         parent: _animationAfterPostController, curve: Curves.easeOut);
 
-    _fadeAnimationController = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 500));
+    _fadeAnimationController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
 
     _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
         parent: _fadeAnimationController, curve: Curves.easeIn));
@@ -1100,7 +1100,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
             _mapAbsensi = new MapEvent();
             eventsAbsensi.events.forEach((absen) => _addEventToCalendar(absen));
             _mapAbsensi.events.forEach((date, list) {
-              _cleanEvents(list);
+              _cleanEvents(date, list);
             });
             if (eventsAbsensi.events != null) {
               widget.mapPegawaiEvent.add(_selectedPegawai, _mapAbsensi);
@@ -1141,75 +1141,66 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     }
   }
 
-  void _cleanEvents(List<DetailAbsensi> events) {
-    int tresholdDutyOn = 9 * 3600;
-    int tresholdDutyOff = 14 * 3600 + 30 * 60;
+  void _cleanEvents(DateTime date, List<DetailAbsensi> events) {
+    if (date.weekday != DateTime.saturday && date.day != DateTime.sunday) {
 
-    events.sort(
-        (a, b) => a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
+      //Jika weekday perlu cleaning
+      int tresholdDuty = 12 * 3600;
+      events.sort(
+          (a, b) => a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
 
-    //Hilangkan seluruh absen antara pukul 09.00 sampai pukul 14.30
-    events.removeWhere((detailAbsensi) {
-      int minute = detailAbsensi.dateTime.minute;
-      int hour = detailAbsensi.dateTime.hour;
-      int second = detailAbsensi.dateTime.second;
-      int milisec = hour * 3600 + minute * 60 + second;
+      //Ambil absen pertama dan terakhir
+      if (events.length > 2) {
+        events.removeRange(1, events.length - 1);
+      }
 
-      return ((milisec > tresholdDutyOn) & (milisec < tresholdDutyOff));
-    });
+      //Ambil satu absen datang dan pulang
+      List<DetailAbsensi> listDatang = [];
+      List<DetailAbsensi> listPulang = [];
 
-    //Ambil absen pertama dan terakhir
-    if (events.length > 2) {
-      events.removeRange(1, events.length - 1);
-    }
-
-    //Ambil satu absen datang dan satu absen pulang
-    int countDatang = 0;
-    int countPulang = 0;
-
-    events.removeWhere((detailAbsensi) {
-      int minute = detailAbsensi.dateTime.minute;
-      int hour = detailAbsensi.dateTime.hour;
-      int second = detailAbsensi.dateTime.second;
-      int milisec = hour * 3600 + minute * 60 + second;
-      bool ret = false;
-      if (milisec < tresholdDutyOn) {
-        if (countDatang > 0) {
-          ret = true;
+      for (int i = 0; i < events.length; i++) {
+        int minute = events[i].dateTime.minute;
+        int hour = events[i].dateTime.hour;
+        int second = events[i].dateTime.second;
+        int milisec = hour * 3600 + minute * 60 + second;
+        if (milisec < tresholdDuty) {
+          listDatang.add(events[i]);
+        } else {
+          listPulang.add(events[i]);
         }
-        countDatang += 1;
       }
-      return ret;
-    });
 
-    events.removeWhere((detailAbsensi) {
-      //Potensi bug di sini
-      int minute = detailAbsensi.dateTime.minute;
-      int hour = detailAbsensi.dateTime.hour;
-      int second = detailAbsensi.dateTime.second;
-      int milisec = hour * 3600 + minute * 60 + second;
-      bool ret = false;
-      if (milisec > tresholdDutyOff) {
-        if (countPulang > 0) {
-          ret = true;
+      events.clear();
+      if (listDatang.length > 0) {
+        events.add(listDatang.first);
+      }
+      if (listPulang.length > 0) {
+        events.add(listPulang.last);
+      }
+
+      //Tambah events kosong jika hanya absen datang atau pulang
+      if (events.length == 1) {
+        int minute = events[0].dateTime.minute;
+        int hour = events[0].dateTime.hour;
+        int second = events[0].dateTime.second;
+        int milisec = hour * 3600 + minute * 60 + second;
+        if (milisec < tresholdDuty) {
+          events
+              .add(new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
         }
-        countPulang += 1;
+        if (milisec >= tresholdDuty) {
+          events.insert(
+              0, new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
+        }
       }
-      return ret;
-    });
+    } else {
+      //Jika weekend langsung ambil pertama dan terakhir
+      events.sort(
+          (a, b) => a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
 
-    //Tambah events kosong jika hanya absen datang atau pulang
-    if (events.length == 1) {
-      int minute = events[0].dateTime.minute;
-      int hour = events[0].dateTime.hour;
-      int second = events[0].dateTime.second;
-      int milisec = hour * 3600 + minute * 60 + second;
-      if (milisec < tresholdDutyOn) {
-        events.add(new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
-      }
-      if (milisec > tresholdDutyOff) {
-        events.insert(
-            0, new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
+      //Ambil absen pertama dan terakhir
+      if (events.length > 2) {
+        events.removeRange(1, events.length - 1);
       }
     }
   }
