@@ -60,8 +60,7 @@ class CalendarCarousel<T> extends StatefulWidget {
   final int markedDateIconMaxShown;
   final double markedDateIconMargin;
   final double markedDateIconOffset;
-  final bool
-      markedDateMoreShowTotal; // null - no indicator, true - show the total events, false - show the total of hidden events
+  final bool markedDateMoreShowTotal;
   final Decoration markedDateMoreCustomDecoration;
   final TextStyle markedDateMoreCustomTextStyle;
   final double childAspectRatio;
@@ -263,8 +262,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _animationAfterPost = CurvedAnimation(
         parent: _animationAfterPostController, curve: Curves.easeOut);
 
-    _fadeAnimationController = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 500));
+    _fadeAnimationController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
 
     _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
         parent: _fadeAnimationController, curve: Curves.easeIn));
