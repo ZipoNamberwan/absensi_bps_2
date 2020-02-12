@@ -1141,10 +1141,11 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   }
 
   void _cleanEvents(DateTime date, List<DetailAbsensi> events) {
-    if (date.weekday != DateTime.saturday && date.day != DateTime.sunday) {
-
+    int tresholdDuty = 12 * 3600;
+    bool isWeekday = (date.weekday != DateTime.saturday) &&
+        (date.weekday != DateTime.sunday);
+    if (isWeekday) {
       //Jika weekday perlu cleaning
-      int tresholdDuty = 12 * 3600;
       events.sort(
           (a, b) => a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
 
@@ -1176,22 +1177,6 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       if (listPulang.length > 0) {
         events.add(listPulang.last);
       }
-
-      //Tambah events kosong jika hanya absen datang atau pulang
-      if (events.length == 1) {
-        int minute = events[0].dateTime.minute;
-        int hour = events[0].dateTime.hour;
-        int second = events[0].dateTime.second;
-        int milisec = hour * 3600 + minute * 60 + second;
-        if (milisec < tresholdDuty) {
-          events
-              .add(new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
-        }
-        if (milisec >= tresholdDuty) {
-          events.insert(
-              0, new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
-        }
-      }
     } else {
       //Jika weekend langsung ambil pertama dan terakhir
       events.sort(
@@ -1200,6 +1185,20 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       //Ambil absen pertama dan terakhir
       if (events.length > 2) {
         events.removeRange(1, events.length - 1);
+      }
+    }
+
+    //Tambah events kosong jika hanya absen datang atau pulang
+    if (events.length == 1) {
+      int minute = events[0].dateTime.minute;
+      int hour = events[0].dateTime.hour;
+      int second = events[0].dateTime.second;
+      int milisec = hour * 3600 + minute * 60 + second;
+      if (milisec < tresholdDuty) {
+        events.add(new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
+      } else {
+        events.insert(
+            0, new DetailAbsensi(dateTime: events[0].dateTime, time: "-"));
       }
     }
   }
@@ -1452,11 +1451,13 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   }
 
   static bool _isTelat(DetailAbsensi detailAbsensi) {
+    bool isWeekday = detailAbsensi.dateTime.weekday != DateTime.saturday &&
+        detailAbsensi.dateTime.weekday != DateTime.sunday;
     int minute = detailAbsensi.dateTime.minute;
     int hour = detailAbsensi.dateTime.hour;
     int second = detailAbsensi.dateTime.second;
     int milisec = hour * 3600 + minute * 60 + second;
-    if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600))) {
+    if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600)) & isWeekday) {
       return true;
     } else {
       return false;
@@ -1464,11 +1465,13 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   }
 
   static bool _isPsw(DetailAbsensi detailAbsensi) {
+    bool isWeekday = detailAbsensi.dateTime.weekday != DateTime.saturday &&
+        detailAbsensi.dateTime.weekday != DateTime.sunday;
     int minute = detailAbsensi.dateTime.minute;
     int hour = detailAbsensi.dateTime.hour;
     int second = detailAbsensi.dateTime.second;
     int milisec = hour * 3600 + minute * 60 + second;
-    if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600))) {
+    if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600)) & isWeekday) {
       return true;
     } else {
       return false;

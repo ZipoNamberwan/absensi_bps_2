@@ -675,11 +675,13 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   }
 
   Color getAbsenMasukColor() {
+    bool isWeekday = _absenMasuk.dateTime.weekday != DateTime.saturday &&
+        _absenMasuk.dateTime.weekday != DateTime.sunday;
     int minute = _absenMasuk.dateTime.minute;
     int hour = _absenMasuk.dateTime.hour;
     int second = _absenMasuk.dateTime.second;
     int milisec = hour * 3600 + minute * 60 + second;
-    if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600))) {
+    if ((milisec > (7 * 3600 + 1800)) & (milisec < (9 * 3600)) & isWeekday) {
       return thirdColor;
     } else {
       return firstColor;
@@ -687,11 +689,13 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   }
 
   Color getAbsenPulangColor() {
+    bool isWeekday = _absenPulang.dateTime.weekday != DateTime.saturday &&
+        _absenPulang.dateTime.weekday != DateTime.sunday;
     int minute = _absenPulang.dateTime.minute;
     int hour = _absenPulang.dateTime.hour;
     int second = _absenPulang.dateTime.second;
     int milisec = hour * 3600 + minute * 60 + second;
-    if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600))) {
+    if ((milisec > (14 * 3600 + 1800)) & (milisec < (16 * 3600)) & isWeekday) {
       return thirdColor;
     } else {
       return secondColor;
