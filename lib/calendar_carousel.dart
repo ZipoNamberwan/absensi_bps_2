@@ -1026,24 +1026,27 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           bg = widget.pulangColor;
         }
       }
-      tmp.add(Container(
-        margin: EdgeInsets.only(top: 5),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4.0),
-          color: bg,
+      tmp.add(Hero(
+        child: Container(
+          margin: EdgeInsets.only(top: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4.0),
+            color: bg,
+          ),
+          child: Text(
+            '${details[i].time}',
+            style: widget.eventTextStyle != null
+                ? widget.eventTextStyle
+                : defaultEventTextStyle,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+          ),
+          padding: EdgeInsets.all(0),
+          width: widget.width / 7 - 5,
+          height: widget.height / 30,
+          alignment: Alignment.center,
         ),
-        child: Text(
-          '${details[i].time}',
-          style: widget.eventTextStyle != null
-              ? widget.eventTextStyle
-              : defaultEventTextStyle,
-          maxLines: 1,
-          textAlign: TextAlign.center,
-        ),
-        padding: EdgeInsets.all(0),
-        width: widget.width / 7 - 5,
-        height: widget.height / 30,
-        alignment: Alignment.center,
+        tag: (new DateFormat('dd MM yyyy')).format(details[i].dateTime) + '$i',
       ));
     }
     return tmp;
@@ -1317,12 +1320,17 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _mapDatetimeAfterPost = new MapEvent();
     final result = await Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) => DetailAbsensiPage(
+        PageRouteBuilder(
+            pageBuilder: (context, anim1, anim2) => DetailAbsensiPage(
                   pegawai: pegawai,
                   dateTime: date,
                   details: detailAbsensi,
                   keterangan: keterangan,
+                ),
+            transitionsBuilder: (context, anim1, anim2, child) =>
+                FadeTransition(
+                  child: child,
+                  opacity: anim1,
                 )));
 
     //Do something here to show result

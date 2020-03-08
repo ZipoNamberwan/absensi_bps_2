@@ -39,8 +39,8 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   TextEditingController _keteranganController;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _afterUpdate = false;
-  AnimationController _animationController;
-  Animation<double> _animation;
+  AnimationController _animationCheckSignController;
+  Animation<double> _animationCheck;
   bool _isSaveLoading = false;
   bool _isDeleteLoading = false;
   bool _isLoadingStatus = true;
@@ -49,6 +49,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   String _base64Image = '';
   File _tmpFile;
   String _initialImagePath = '';
+  AnimationController _pageAnimationController;
 
   @override
   void initState() {
@@ -56,11 +57,16 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
 
     _getAllStatus();
 
-    _animationController = AnimationController(
+    _animationCheckSignController = AnimationController(
         duration: const Duration(milliseconds: 1000), vsync: this);
 
-    _animation =
-        CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
+    _pageAnimationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+
+    _pageAnimationController.forward().orCancel;
+
+    _animationCheck = CurvedAnimation(
+        parent: _animationCheckSignController, curve: Curves.easeIn);
 
     if (widget.details.length == 0) {
       _absenMasuk = new DetailAbsensi(dateTime: widget.dateTime, time: "-");
@@ -73,7 +79,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
       _selectedStatus = widget.keterangan[0].status.id;
       _initialKeteranganStatus = widget.keterangan[0].keterangan;
       _initialImagePath = widget.keterangan[0].gambar;
-      _animationController.forward();
+      _animationCheckSignController.forward().orCancel;
     }
 
     _keteranganController = new TextEditingController(
@@ -88,7 +94,8 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _animationCheckSignController.dispose();
+    _pageAnimationController.dispose();
     _keteranganController.dispose();
     super.dispose();
   }
@@ -184,19 +191,22 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
         padding: EdgeInsets.all(10),
         child: Column(
           children: <Widget>[
-            Container(
-              margin: EdgeInsets.only(bottom: 10),
-              child: Center(
-                child: Text(
-                  DateFormat.yMMMMd("id").format(widget.dateTime),
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
+            FadeTranslateContainer(
+              child: Container(
+                margin: EdgeInsets.only(bottom: 10),
+                child: Center(
+                  child: Text(
+                    DateFormat.yMMMMd("id").format(widget.dateTime),
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
+              animation: CurvedAnimation(parent: _pageAnimationController, curve: Interval(0.0, 0.25,)),
             ),
-            Card(
+            FadeTranslateContainer(child: Card(
               child: Container(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -228,71 +238,81 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                       ),
                       child: Row(
                         children: <Widget>[
-                          Container(
-                            width: MediaQuery.of(context).size.width / 3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: getAbsenMasukColor(),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.grey,
-                                    blurRadius: 1,
-                                    offset: Offset.fromDirection(1, 1))
-                              ],
+                          Hero(
+                            child: Container(
+                              width: MediaQuery.of(context).size.width / 3,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: getAbsenMasukColor(),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: Colors.grey,
+                                      blurRadius: 1,
+                                      offset: Offset.fromDirection(1, 1))
+                                ],
+                              ),
+                              child: Center(
+                                  child: Column(
+                                    children: <Widget>[
+                                      Text(
+                                        _absenMasuk.time,
+                                        style: TextStyle(
+                                          fontSize: 25,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        "datang",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  )),
+                              padding: EdgeInsets.all(10),
                             ),
-                            child: Center(
-                                child: Column(
-                              children: <Widget>[
-                                Text(
-                                  _absenMasuk.time,
-                                  style: TextStyle(
-                                    fontSize: 25,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  "datang",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            )),
-                            padding: EdgeInsets.all(10),
+                            tag: (new DateFormat('dd MM yyyy'))
+                                .format(widget.dateTime) +
+                                '0',
                           ),
-                          Container(
-                            width: MediaQuery.of(context).size.width / 3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: getAbsenPulangColor(),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.grey,
-                                    blurRadius: 1,
-                                    offset: Offset.fromDirection(1, 1))
-                              ],
+                          Hero(
+                            child: Container(
+                              width: MediaQuery.of(context).size.width / 3,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: getAbsenPulangColor(),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: Colors.grey,
+                                      blurRadius: 1,
+                                      offset: Offset.fromDirection(1, 1))
+                                ],
+                              ),
+                              child: Center(
+                                  child: Column(
+                                    children: <Widget>[
+                                      Text(
+                                        _absenPulang.time,
+                                        style: TextStyle(
+                                          fontSize: 25,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        "pulang",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  )),
+                              padding: EdgeInsets.all(10),
                             ),
-                            child: Center(
-                                child: Column(
-                              children: <Widget>[
-                                Text(
-                                  _absenPulang.time,
-                                  style: TextStyle(
-                                    fontSize: 25,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  "pulang",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            )),
-                            padding: EdgeInsets.all(10),
+                            tag: (new DateFormat('dd MM yyyy'))
+                                .format(widget.dateTime) +
+                                '1',
                           ),
                         ],
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -301,8 +321,8 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                   ],
                 ),
               ),
-            ),
-            Card(
+            ), animation: CurvedAnimation(parent: _pageAnimationController, curve: Interval(0.25, 0.5,)),),
+            FadeTranslateContainer(child: Card(
               child: Container(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -323,21 +343,21 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                           Container(
                               margin: EdgeInsets.only(right: 10),
                               child: ((widget.keterangan.length != 0) |
-                                      (_afterUpdate))
+                              (_afterUpdate))
                                   ? FadeTransition(
-                                      opacity: _animation,
-                                      child: Icon(
-                                        Icons.check_circle,
-                                        color: Colors.blueAccent,
-                                        size: 20,
-                                      ))
+                                  opacity: _animationCheck,
+                                  child: Icon(
+                                    Icons.check_circle,
+                                    color: Colors.blueAccent,
+                                    size: 20,
+                                  ))
                                   : null),
                           _isLoadingStatus
                               ? SizedBox(
-                                  child: CircularProgressIndicator(),
-                                  width: 15,
-                                  height: 15,
-                                )
+                            child: CircularProgressIndicator(),
+                            width: 15,
+                            height: 15,
+                          )
                               : Container(),
                         ],
                       ),
@@ -363,25 +383,25 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                             value: _mapStatus.maps == null
                                 ? null
                                 : _selectedStatus != null
-                                    ? _mapStatus.maps[_selectedStatus].id
-                                    : null,
+                                ? _mapStatus.maps[_selectedStatus].id
+                                : null,
                             underline: _selectedStatus != null
                                 ? Container(
-                                    height: 1.0,
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(
-                                                color: Colors.blueAccent,
-                                                width: 2.0))),
-                                  )
+                              height: 1.0,
+                              decoration: const BoxDecoration(
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: Colors.blueAccent,
+                                          width: 2.0))),
+                            )
                                 : Container(
-                                    height: 1.0,
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(
-                                                color: Color(0xFFBDBDBD),
-                                                width: 0.0))),
-                                  ),
+                              height: 1.0,
+                              decoration: const BoxDecoration(
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: Color(0xFFBDBDBD),
+                                          width: 0.0))),
+                            ),
                             hint: Text(
                               "Status Absensi...",
                               style: TextStyle(fontSize: 14),
@@ -395,19 +415,19 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                               isDense: true,
                               enabledBorder: _initialKeteranganStatus != null
                                   ? new OutlineInputBorder(
-                                      borderRadius:
-                                          new BorderRadius.circular(5.0),
-                                      borderSide: new BorderSide(
-                                        color: Colors.blueAccent,
-                                        width: 2,
-                                      ))
+                                  borderRadius:
+                                  new BorderRadius.circular(5.0),
+                                  borderSide: new BorderSide(
+                                    color: Colors.blueAccent,
+                                    width: 2,
+                                  ))
                                   : new OutlineInputBorder(
-                                      borderRadius:
-                                          new BorderRadius.circular(5.0),
-                                      borderSide: new BorderSide(
-                                        color: Colors.grey[200],
-                                      ),
-                                    ),
+                                borderRadius:
+                                new BorderRadius.circular(5.0),
+                                borderSide: new BorderSide(
+                                  color: Colors.grey[200],
+                                ),
+                              ),
                               //fillColor: Colors.green
                             ),
                             controller: _keteranganController,
@@ -426,8 +446,8 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                   ],
                 ),
               ),
-            ),
-            Card(
+            ), animation: CurvedAnimation(parent: _pageAnimationController, curve: Interval(0.5, 0.75,)),),
+            FadeTranslateContainer(child: Card(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
@@ -449,14 +469,14 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                   ),
                   widget.keterangan.length == 0
                       ? Padding(
-                          padding: const EdgeInsets.only(
-                              left: 16, right: 16, top: 8),
-                          child: OutlineButton(
-                            onPressed: _chooseImage,
-                            splashColor: splashColor,
-                            child: Text("Pilih Gambar"),
-                          ),
-                        )
+                    padding: const EdgeInsets.only(
+                        left: 16, right: 16, top: 8),
+                    child: OutlineButton(
+                      onPressed: _chooseImage,
+                      splashColor: splashColor,
+                      child: Text("Pilih Gambar"),
+                    ),
+                  )
                       : Container(),
                   Container(
                     padding: EdgeInsets.only(
@@ -464,33 +484,33 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                     child: widget.keterangan.length == 0
                         ? _showImage()
                         : ((_initialImagePath != '') &
-                                (_initialImagePath != null))
-                            ? Container(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Image.network(
-                                    _initialImagePath,
-                                    height: _imageHeight,
-                                    fit: BoxFit.cover,
-                                    semanticLabel: "image",
-                                    loadingBuilder: (context, widget, chunk) {
-                                      if (chunk == null) return widget;
-                                      return LinearProgressIndicator();
-                                    },
-                                  ),
-                                ),
-                              )
-                            : Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  'Tidak ada bukti diupload',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
+                    (_initialImagePath != null))
+                        ? Container(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Image.network(
+                          _initialImagePath,
+                          height: _imageHeight,
+                          fit: BoxFit.cover,
+                          semanticLabel: "image",
+                          loadingBuilder: (context, widget, chunk) {
+                            if (chunk == null) return widget;
+                            return LinearProgressIndicator();
+                          },
+                        ),
+                      ),
+                    )
+                        : Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Tidak ada bukti diupload',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
+            ), animation: CurvedAnimation(parent: _pageAnimationController, curve: Interval(0.75, 1.0,)),),
           ],
         ),
       ),
@@ -642,7 +662,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
               gambar: response.bukti),
           dateTime: widget.dateTime,
         );
-        _animationController.forward();
+        _animationCheckSignController.forward();
         _afterUpdate = true;
         _isSaveLoading = false;
       });
@@ -713,4 +733,34 @@ class StatusPage {
   DateTime dateTime;
 
   StatusPage({this.status, this.keteranganAbsensi, this.dateTime});
+}
+
+class FadeTranslateContainer extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  FadeTranslateContainer({this.animation, this.child});
+
+  final Tween<double> fadeTween = new Tween(begin: 0.0, end: 1.0);
+  final Tween<Offset> offsetTween =
+      new Tween(end: Offset.zero, begin: Offset(100, 0));
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: offsetTween.evaluate(
+              CurvedAnimation(parent: animation, curve: Curves.elasticOut)),
+          child: Opacity(
+            child: child,
+            opacity: fadeTween.evaluate(
+                CurvedAnimation(parent: animation, curve: Curves.linear)),
+          ),
+        );
+      },
+      child: child,
+    );
+  }
 }
