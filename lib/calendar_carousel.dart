@@ -689,7 +689,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                                     child: Container(
                                       margin: EdgeInsets.all(2),
                                       decoration: BoxDecoration(
-                                          color: Colors.orange,
+                                          color: Colors.amberAccent[100],
                                           borderRadius:
                                               BorderRadius.circular(3)),
                                     ),
@@ -1063,8 +1063,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
             child: Container(
               padding: EdgeInsets.all(3),
               child: Icon(
-                Icons.assistant_photo,
-                color: Colors.red[900],
+                Icons.check_circle,
+                color: Colors.red[600],
                 size: 13,
               ),
             ));
