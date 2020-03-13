@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:absensi_bps_2/classes/bidang.dart';
+import 'package:absensi_bps_2/classes/bottom_navy_bar.dart';
 import 'package:absensi_bps_2/src/color.dart';
-import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:date_utils/date_utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -504,7 +504,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 ),
               ),
             ),
-            bottomNavigationBar: BottomNavyBar(
+            bottomNavigationBar:
+                /*BottomNavyBar(
               showElevation: true,
               itemCornerRadius: 15,
               curve: Curves.easeIn,
@@ -532,7 +533,49 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     activeColor: widget.navItemColorActive,
                     inactiveColor: widget.navItemColorInactive),
               ],
+            )*/
+                BottomAppBar(
+              child: Container(
+                child: BottomNavyBar(
+                  backgroundColor: Colors.transparent,
+                  itemCornerRadius: 15,
+                  curve: Curves.easeIn,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  selectedIndex: _currentIndex,
+                  onItemSelected: (index) {
+                    //_fadeAnimationController.reset();
+                    setState(() => _currentIndex = index);
+                    if (_fadeAnimation.status == AnimationStatus.completed) {
+                      _fadeAnimationController.reset();
+                    }
+                    _fadeAnimationController.forward().orCancel;
+                  },
+                  items: <BottomNavyBarItem>[
+                    BottomNavyBarItem(
+                        textAlign: TextAlign.center,
+                        title: Text('Home'),
+                        icon: Icon(Icons.home),
+                        activeColor: widget.navItemColorActive,
+                        inactiveColor: widget.navItemColorInactive),
+                    BottomNavyBarItem(
+                        textAlign: TextAlign.center,
+                        title: Text('Absensi'),
+                        icon: Icon(Icons.date_range),
+                        activeColor: widget.navItemColorActive,
+                        inactiveColor: widget.navItemColorInactive),
+                  ],
+                ),
+                height: kBottomNavigationBarHeight,
+              ),
+              shape: CircularNotchedRectangle(),
             ),
+            floatingActionButton: FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () {},
+              mini: true,
+            ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerDocked,
           );
   }
 
