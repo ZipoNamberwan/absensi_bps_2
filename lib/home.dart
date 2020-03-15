@@ -53,18 +53,6 @@ class _HomePageState extends State<HomePage> {
       height: widget.height,
       child: Stack(
         children: <Widget>[
-          /*Transform.translate(
-          offset: Offset(screenWidth * 0.4, 10),
-          child: Transform.rotate(
-            angle: -0.1,
-            child: SvgPicture.asset(
-              logo,
-              height: logoHeight,
-              color: logoTintColor,
-              semanticsLabel: "Logo BPS",
-            ),
-          ),
-        ),*/
           SingleChildScrollView(
             child: Column(
               children: <Widget>[
@@ -118,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.only(
                             right: 16.0, bottom: 16, top: 16),
                         child: Material(
-                          elevation: 4,
+                          elevation: 2,
                           borderRadius:
                               const BorderRadius.all(Radius.circular(12)),
                           child: Padding(

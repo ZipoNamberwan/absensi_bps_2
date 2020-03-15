@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:absensi_bps_2/classes/bidang.dart';
-import 'package:absensi_bps_2/classes/bottom_navy_bar.dart';
+import 'package:absensi_bps_2/classes/custom_bottom_nav_bar.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:date_utils/date_utils.dart';
 import 'package:flutter/gestures.dart';
@@ -186,7 +187,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     with TickerProviderStateMixin {
   static final int homePageIndex = 0;
   static final int calendarPageIndex = 1;
-  static final int akunPageIndex = 3;
+  static final int ckpPageIndex = 3;
 
   PageController _controller;
   List<DateTime> _dates = List(3);
@@ -201,17 +202,26 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   AnimationController _animationEventController;
   AnimationController _animationKeteranganController;
   AnimationController _animationAfterPostController;
-  Animation<double> _animationEvent;
+  AnimationController _fabAnimationController;
+  Animation<double> _animationAbsensiEvent;
   Animation<double> _animationKeterangan;
   Animation<double> _animationAfterPost;
+  Animation<double> _fabRotate;
+  Animation<double> _fabBackgroundAnimation;
+  Animation<Offset> _translateFabAnimation1;
+  Animation<Offset> _translateFabAnimation2;
+  Animation<double> _scaleFabAnimation;
+  Animation<double> _fadeFabAnimation;
+  Animation<double> _fadeFabTextAnimation;
   bool _isDetailLoading = true;
   bool _isListPegawaiLoading = true;
   bool _isKeteranganLoading = true;
   MapEvent<bool> _mapDatetimeAfterPost = new MapEvent();
   int _currentIndex = 0;
   Widget _currentPage;
-  AnimationController _fadeAnimationController;
-  Animation<double> _fadeAnimation;
+  AnimationController _fadePageAnimationController;
+  Animation<double> _fadePageAnimation;
+  bool _fabOptionIsOpen = false;
 
   /// When FIRSTDAYOFWEEK is 0 in dart-intl, it represents Monday. However it is the second day in the arrays of Weekdays.
   /// Therefore we need to add 1 modulo 7 to pick the right weekday from intl. (cf. [GlobalMaterialLocalizations])
@@ -253,7 +263,38 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _animationAfterPostController = AnimationController(
         duration: const Duration(milliseconds: 2000), vsync: this);
 
-    _animationEvent = CurvedAnimation(
+    _fabAnimationController =
+        AnimationController(duration: Duration(milliseconds: 400), vsync: this);
+
+    _fabRotate = Tween<double>(begin: 0.0, end: -3 * pi / 4).animate(
+        CurvedAnimation(
+            parent: _fabAnimationController, curve: Curves.elasticOut));
+
+    _translateFabAnimation1 =
+        Tween<Offset>(begin: Offset.zero, end: Offset(-50, -50)).animate(
+            CurvedAnimation(
+                parent: _fabAnimationController, curve: Interval(0.0, 1.0, curve: Curves.elasticOut)));
+
+    _translateFabAnimation2 =
+        Tween<Offset>(begin: Offset.zero, end: Offset(50, -50)).animate(
+            CurvedAnimation(
+                parent: _fabAnimationController, curve: Interval(0.0, 1.0, curve: Curves.elasticOut)));
+
+    _fadeFabAnimation =
+        CurvedAnimation(parent: _fabAnimationController, curve: Interval(0.0, 0.1, curve: Curves.ease));
+
+    _scaleFabAnimation = Tween<double>(begin: 40, end: 56).animate(
+        CurvedAnimation(
+            parent: _fabAnimationController, curve: Interval(0.0, 0.8, curve: Curves.elasticOut)));
+
+    _fadeFabTextAnimation =
+        CurvedAnimation(parent: _fabAnimationController, curve: Interval(0.5, 0.8, curve: Curves.ease));
+
+    _fabBackgroundAnimation = Tween<double>(begin: 0, end: widget.height + 50)
+        .animate(CurvedAnimation(
+        parent: _fabAnimationController, curve: Curves.easeOut));
+
+    _animationAbsensiEvent = CurvedAnimation(
         parent: _animationEventController, curve: Curves.easeIn);
 
     _animationKeterangan = CurvedAnimation(
@@ -262,17 +303,16 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _animationAfterPost = CurvedAnimation(
         parent: _animationAfterPostController, curve: Curves.easeOut);
 
-    _fadeAnimationController =
+    _fadePageAnimationController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 500));
 
-    _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
-        parent: _fadeAnimationController, curve: Curves.easeIn));
+    _fadePageAnimation = Tween(begin: 0.0, end: 1.0).animate(
+        new CurvedAnimation(
+            parent: _fadePageAnimationController, curve: Curves.easeIn));
 
-    _fadeAnimationController.addListener(() {
-      setState(() {});
-    });
-
-    _fadeAnimationController.forward().orCancel;
+    _fadePageAnimationController
+        .forward()
+        .orCancel;
 
     _setDate();
   }
@@ -283,7 +323,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _animationAfterPostController.dispose();
     _animationEventController.dispose();
     _animationKeteranganController.dispose();
-    _fadeAnimationController.dispose();
+    _fadePageAnimationController.dispose();
+    _fabAnimationController.dispose();
     super.dispose();
   }
 
@@ -313,48 +354,48 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     children: <Widget>[
                       widget.bidang != null
                           ? IconButton(
-                              icon: Icon(Icons.dehaze),
-                              iconSize: widget.iconSize,
-                              onPressed: widget.onPressedDrawer)
+                          icon: Icon(Icons.dehaze),
+                          iconSize: widget.iconSize,
+                          onPressed: widget.onPressedDrawer)
                           : Container(),
                       widget.bidang != null
                           ? Expanded(
-                              child: Container(
-                                child: DropdownButton<String>(
-                                  isExpanded: true,
-                                  items: widget.pegawaiList.maps != null
-                                      ? _createDropdownItems()
-                                      : [],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _isReloadSelectedDate = false;
-                                      _selectedPegawai = value;
-                                      _onPegawaiChanged();
-                                    });
-                                  },
-                                  isDense: true,
-                                  value: _selectedPegawai != null
-                                      ? _selectedPegawai
-                                      : null,
-                                ),
-                                margin: EdgeInsets.only(left: 15),
-                              ),
-                              flex: 2,
-                            )
+                        child: Container(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            items: widget.pegawaiList.maps != null
+                                ? _createDropdownItems()
+                                : [],
+                            onChanged: (value) {
+                              setState(() {
+                                _isReloadSelectedDate = false;
+                                _selectedPegawai = value;
+                                _onPegawaiChanged();
+                              });
+                            },
+                            isDense: true,
+                            value: _selectedPegawai != null
+                                ? _selectedPegawai
+                                : null,
+                          ),
+                          margin: EdgeInsets.only(left: 15),
+                        ),
+                        flex: 2,
+                      )
                           : Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 16),
-                                child: Container(
-                                  child: Text(
-                                    widget.selectedPegawai.nama,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: widget.headerTextStyle,
-                                  ),
-                                ),
-                              ),
-                              flex: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Container(
+                            child: Text(
+                              widget.selectedPegawai.nama,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: widget.headerTextStyle,
                             ),
+                          ),
+                        ),
+                        flex: 2,
+                      ),
                       CalendarHeader(
                         showHeader: widget.showHeader,
                         headerTitle: widget.weekFormat
@@ -369,9 +410,9 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                         onRightButtonPressed: () => _setDate(2),
                         isTitleTouchable: widget.headerTitleTouchable,
                         onHeaderTitlePressed:
-                            widget.onHeaderTitlePressed != null
-                                ? widget.onHeaderTitlePressed
-                                : () => _selectDateFromPicker(),
+                        widget.onHeaderTitlePressed != null
+                            ? widget.onHeaderTitlePressed
+                            : () => _selectDateFromPicker(),
                         iconSize: widget.iconSize,
                       )
                     ],
@@ -391,27 +432,27 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           ),
           Expanded(
               child: PageView.builder(
-            itemCount: 3,
-            dragStartBehavior: DragStartBehavior.down,
-            physics: widget.isScrollable
-                ? ScrollPhysics()
-                : NeverScrollableScrollPhysics(),
-            onPageChanged: (index) {
-              this._setDate(index);
-            },
-            controller: _controller,
-            itemBuilder: (context, index) {
-              return builder(index);
-            },
-            pageSnapping: true,
-          )),
+                itemCount: 3,
+                dragStartBehavior: DragStartBehavior.down,
+                physics: widget.isScrollable
+                    ? ScrollPhysics()
+                    : NeverScrollableScrollPhysics(),
+                onPageChanged: (index) {
+                  this._setDate(index);
+                },
+                controller: _controller,
+                itemBuilder: (context, index) {
+                  return builder(index);
+                },
+                pageSnapping: true,
+              )),
         ],
       ),
     );
 
     Widget homePage;
 
-    Widget akunPage;
+    Widget ckpPage;
 
     if (widget.bidang == null) {
       homePage = HomePage(
@@ -423,172 +464,407 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         onPressedDrawer: widget.onPressedDrawer,
       );
 
-      akunPage = Container();
+      ckpPage = Container();
 
       if (_currentIndex == homePageIndex) {
         _currentPage = homePage;
       } else if (_currentIndex == calendarPageIndex) {
         _currentPage = calendarPage;
       } else {
-        _currentPage = akunPage;
+        _currentPage = ckpPage;
       }
     }
 
     return widget.bidang != null
         ? Scaffold(
-            drawer: Drawer(
-              child: _createDrawer(),
-            ),
-            body: Stack(
+      drawer: Drawer(
+        child: _createDrawer(),
+      ),
+      body: Stack(
+        children: <Widget>[
+          Column(
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.only(
+                    top: MediaQuery
+                        .of(context)
+                        .padding
+                        .top),
+                height: widget.headerHeight,
+                child: Container(),
+              ),
+              (_isDetailLoading |
+              _isListPegawaiLoading |
+              _isKeteranganLoading)
+                  ? Align(
+                child: LinearProgressIndicator(),
+                alignment: Alignment.bottomCenter,
+              )
+                  : Container(),
+            ],
+          ),
+          Container(
+              margin: EdgeInsets.only(
+                  top: MediaQuery
+                      .of(context)
+                      .padding
+                      .top),
+              child: calendarPage)
+        ],
+      ),
+      key: widget.scaffoldKey,
+    )
+        : Scaffold(
+      drawer: Drawer(
+        child: _createDrawer(),
+      ),
+      key: widget.scaffoldKey,
+      body: SingleChildScrollView(
+        child:
+        //custom icon
+        Container(
+          margin:
+          EdgeInsets.only(top: MediaQuery
+              .of(context)
+              .padding
+              .top),
+          child: AnimatedBuilder(
+            animation: _fadePageAnimation,
+            builder: (context, child) {
+              return Opacity(
+                opacity: _fadePageAnimation.value,
+                child: child,
+              );
+            },
+            child: Stack(
               children: <Widget>[
                 Column(
                   children: <Widget>[
-                    Container(
-                      margin: EdgeInsets.only(
-                          top: MediaQuery.of(context).padding.top),
+                    SizedBox(
                       height: widget.headerHeight,
                       child: Container(),
                     ),
                     (_isDetailLoading |
-                            _isListPegawaiLoading |
-                            _isKeteranganLoading)
+                    _isListPegawaiLoading |
+                    _isKeteranganLoading)
                         ? Align(
-                            child: LinearProgressIndicator(),
-                            alignment: Alignment.bottomCenter,
-                          )
+                      child: LinearProgressIndicator(),
+                      alignment: Alignment.bottomCenter,
+                    )
                         : Container(),
                   ],
                 ),
-                Container(
-                    margin: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top),
-                    child: calendarPage)
-              ],
-            ),
-            key: widget.scaffoldKey,
-          )
-        : Scaffold(
-            drawer: Drawer(
-              child: _createDrawer(),
-            ),
-            key: widget.scaffoldKey,
-            body: SingleChildScrollView(
-              child:
-                  //custom icon
-                  Container(
-                margin:
-                    EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                child: Opacity(
-                  child: Stack(
-                    children: <Widget>[
-                      Column(
-                        children: <Widget>[
-                          SizedBox(
-                            height: widget.headerHeight,
-                            child: Container(),
+                _currentPage,
+                Positioned(
+                  bottom: 0,
+                  child: AnimatedBuilder(
+                    animation: _fabBackgroundAnimation,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: 0.8,
+                        child: Material(
+                          child: GestureDetector(
+                            onTap: (){
+                              if (_fabOptionIsOpen) {
+                                _fabAnimationController.reverse();
+                                _fabOptionIsOpen = false;
+                              }
+                            },
+                            child: Container(
+                              height: _fabBackgroundAnimation.value,
+                              width: widget.width,
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(50),
+                                      topRight: Radius.circular(50))),
+                            ),
                           ),
-                          (_isDetailLoading |
-                                  _isListPegawaiLoading |
-                                  _isKeteranganLoading)
-                              ? Align(
-                                  child: LinearProgressIndicator(),
-                                  alignment: Alignment.bottomCenter,
-                                )
-                              : Container(),
+                          elevation: 6,
+                        ),
+                      );
+                    },
+                    child: Container(),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  child: Container(
+                    width: widget.width,
+                    child: AnimatedBuilder(
+                      animation: _translateFabAnimation1,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: _translateFabAnimation1.value,
+                          child: child,
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Container(
+                            margin: EdgeInsets.only(bottom: 8),
+                            child: AnimatedBuilder(
+                              animation: _fadeFabTextAnimation,
+                              builder: (context, child) {
+                                return Opacity(
+                                  opacity: _fadeFabTextAnimation.value,
+                                  child: child,
+                                );
+                              },
+                              child: Material(
+                                elevation: 8,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: RichText(
+                                    textAlign: TextAlign.center,
+                                    text: TextSpan(
+                                        text: "Tambah",
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: "\n",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: "Keterangan",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: "\n",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: "Absensi",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ]),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedBuilder(
+                            animation: _fadeFabAnimation,
+                            builder: (context, child) {
+                              return Opacity(
+                                opacity: _fadeFabAnimation.value,
+                                child: AnimatedBuilder(
+                                    animation: _scaleFabAnimation,
+                                    builder: (context, child) {
+                                      return Container(
+                                        width: _scaleFabAnimation.value,
+                                        height: _scaleFabAnimation.value,
+                                        child: FittedBox(
+                                          child: child,
+                                          fit: BoxFit.fill,
+                                        ),
+                                      );
+                                    },
+                                    child: child),
+                              );
+                            },
+                            child: FloatingActionButton(
+                              onPressed: () {},
+                              child: Icon(Icons.add_circle),
+                              heroTag: "add absensi",
+                            ),
+                          )
                         ],
                       ),
-                      _currentPage
-                    ],
+                    ),
                   ),
-                  opacity: _fadeAnimation.value,
                 ),
-              ),
-            ),
-            bottomNavigationBar:
-                /*BottomNavyBar(
-              showElevation: true,
-              itemCornerRadius: 15,
-              curve: Curves.easeIn,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              selectedIndex: _currentIndex,
-              onItemSelected: (index) {
-                //_fadeAnimationController.reset();
-                setState(() => _currentIndex = index);
-                if (_fadeAnimation.status == AnimationStatus.completed) {
-                  _fadeAnimationController.reset();
-                }
-                _fadeAnimationController.forward().orCancel;
-              },
-              items: <BottomNavyBarItem>[
-                BottomNavyBarItem(
-                    textAlign: TextAlign.center,
-                    title: Text('Home'),
-                    icon: Icon(Icons.home),
-                    activeColor: widget.navItemColorActive,
-                    inactiveColor: widget.navItemColorInactive),
-                BottomNavyBarItem(
-                    textAlign: TextAlign.center,
-                    title: Text('Absensi'),
-                    icon: Icon(Icons.date_range),
-                    activeColor: widget.navItemColorActive,
-                    inactiveColor: widget.navItemColorInactive),
+                Positioned(
+                  bottom: 0,
+                  child: Container(
+                    width: widget.width,
+                    child: AnimatedBuilder(
+                      animation: _translateFabAnimation2,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: _translateFabAnimation2.value,
+                          child: child,
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Container(
+                            margin: EdgeInsets.only(bottom: 8),
+                            child: AnimatedBuilder(
+                              animation: _fadeFabTextAnimation,
+                              builder: (context, child) {
+                                return Opacity(
+                                  opacity: _fadeFabTextAnimation.value,
+                                  child: child,);
+                              },
+                              child: Material(
+                                elevation: 8,
+                                child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: RichText(
+                                      textAlign: TextAlign.center,
+                                      text: TextSpan(
+                                          text: "Tambah",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                          ),
+                                          children: [
+                                            TextSpan(
+                                              text: "\n",
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: "CKP",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: "\n",
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: "Harian",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ]),
+                                    )),
+                              ),
+                            ),
+                          ),
+                          AnimatedBuilder(
+                            animation: _fadeFabAnimation,
+                            builder: (context, child) {
+                              return Opacity(
+                                opacity: _fadeFabAnimation.value,
+                                child: AnimatedBuilder(
+                                    animation: _scaleFabAnimation,
+                                    builder: (context, child) {
+                                      return Container(
+                                        width: _scaleFabAnimation.value,
+                                        height: _scaleFabAnimation.value,
+                                        child: FittedBox(
+                                          child: child,
+                                          fit: BoxFit.fill,
+                                        ),
+                                      );
+                                    },
+                                    child: child),
+                              );
+                            },
+                            child: FloatingActionButton(
+                              onPressed: () {},
+                              child: Icon(Icons.playlist_add),
+                              heroTag: "add ckp",
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                )
               ],
-            )*/
-                BottomAppBar(
-              child: Container(
-                child: BottomNavyBar(
-                  backgroundColor: Colors.transparent,
-                  itemCornerRadius: 15,
-                  curve: Curves.easeIn,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  selectedIndex: _currentIndex,
-                  onItemSelected: (index) {
-                    //_fadeAnimationController.reset();
-                    setState(() => _currentIndex = index);
-                    if (_fadeAnimation.status == AnimationStatus.completed) {
-                      _fadeAnimationController.reset();
-                    }
-                    _fadeAnimationController.forward().orCancel;
-                  },
-                  items: <BottomNavyBarItem>[
-                    BottomNavyBarItem(
-                        textAlign: TextAlign.center,
-                        title: Text('Home'),
-                        icon: Icon(Icons.home),
-                        activeColor: widget.navItemColorActive,
-                        inactiveColor: widget.navItemColorInactive),
-                    BottomNavyBarItem(
-                        textAlign: TextAlign.center,
-                        title: Text('Absensi'),
-                        icon: Icon(Icons.date_range),
-                        activeColor: widget.navItemColorActive,
-                        inactiveColor: widget.navItemColorInactive),
-                  ],
-                ),
-                height: kBottomNavigationBarHeight,
-              ),
-              shape: CircularNotchedRectangle(),
             ),
-            floatingActionButton: FloatingActionButton(
-              child: Icon(Icons.add),
-              onPressed: () {},
-              mini: true,
-            ),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
-          );
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        elevation: 8,
+        clipBehavior: Clip.antiAlias,
+        child: CustomBottomNavBar(
+          animationDuration: Duration(milliseconds: 300),
+          items: [
+            BottomNavyBarItem(icon: Icon(Icons.home), title: "Home"),
+            BottomNavyBarItem(
+                icon: Icon(Icons.date_range), title: "Absensi"),
+            BottomNavyBarItem(
+                icon: Icon(Icons.file_download), title: "Unduh"),
+            BottomNavyBarItem(
+                icon: Icon(Icons.exit_to_app), title: "Sign Out")
+          ],
+          onItemSelected: (index) {
+            if (_fabOptionIsOpen) {
+              _fabAnimationController.reverse();
+              _fabOptionIsOpen = false;
+            }
+            _fadePageAnimationController.reset();
+            setState(() {
+              _currentIndex = index;
+            });
+            if (_fadePageAnimation.status == AnimationStatus.completed) {
+              _fadePageAnimationController.reset();
+            }
+            _fadePageAnimationController
+                .forward()
+                .orCancel;
+          },
+          selectedIndex: _currentIndex,
+        ),
+        shape: CircularNotchedRectangle(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: "main fab",
+        child: AnimatedBuilder(
+          animation: _fabRotate,
+          builder: (context, child) {
+            return Transform.rotate(
+              angle: _fabRotate.value,
+              child: child,
+            );
+          },
+          child: Icon(Icons.add),
+        ),
+        onPressed: () {
+          if (_fabOptionIsOpen) {
+            _fabAnimationController.reverse();
+            _fabOptionIsOpen = false;
+          } else {
+            _fabAnimationController
+                .forward()
+                .orCancel;
+            _fabOptionIsOpen = true;
+          }
+        },
+        mini: true,
+      ),
+      floatingActionButtonLocation:
+      FloatingActionButtonLocation.centerDocked,
+    );
   }
 
   AnimatedBuilder builder(int slideIndex) {
     int totalItemCount = widget.staticSixWeekFormat
         ? 42
         : DateTime(
-              _dates[slideIndex].year,
-              _dates[slideIndex].month + 1,
-              0,
-            ).day +
-            _startWeekday +
-            (7 - _endWeekday);
+      _dates[slideIndex].year,
+      _dates[slideIndex].month + 1,
+      0,
+    ).day +
+        _startWeekday +
+        (7 - _endWeekday);
     int year = _dates[slideIndex].year;
     int month = _dates[slideIndex].month;
 
@@ -624,204 +900,218 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                   children: List.generate(totalItemCount,
 
                       /// last day of month + weekday
-                      (index) {
-                    bool isToday =
-                        DateTime.now().day == index + 1 - _startWeekday &&
-                            DateTime.now().month == month &&
-                            DateTime.now().year == year;
-                    bool isSelectedDay = widget.selectedDateTime != null &&
-                        widget.selectedDateTime.year == year &&
-                        widget.selectedDateTime.month == month &&
-                        widget.selectedDateTime.day ==
-                            index + 1 - _startWeekday;
-                    bool isPrevMonthDay = index < _startWeekday;
-                    bool isNextMonthDay = index >=
-                        (DateTime(year, month + 1, 0).day) + _startWeekday;
-                    bool isThisMonthDay = !isPrevMonthDay && !isNextMonthDay;
+                          (index) {
+                        bool isToday =
+                            DateTime
+                                .now()
+                                .day == index + 1 - _startWeekday &&
+                                DateTime
+                                    .now()
+                                    .month == month &&
+                                DateTime
+                                    .now()
+                                    .year == year;
+                        bool isSelectedDay = widget.selectedDateTime != null &&
+                            widget.selectedDateTime.year == year &&
+                            widget.selectedDateTime.month == month &&
+                            widget.selectedDateTime.day ==
+                                index + 1 - _startWeekday;
+                        bool isPrevMonthDay = index < _startWeekday;
+                        bool isNextMonthDay = index >=
+                            (DateTime(year, month + 1, 0).day) + _startWeekday;
+                        bool isThisMonthDay = !isPrevMonthDay &&
+                            !isNextMonthDay;
 
-                    DateTime now = DateTime(year, month, 1);
-                    //TextStyle textStyle;
-                    TextStyle defaultTextStyle;
-                    if (isPrevMonthDay && !widget.showOnlyCurrentMonthDate) {
-                      now = now.subtract(Duration(days: _startWeekday - index));
-                      //textStyle = widget.prevDaysTextStyle;
-                      defaultTextStyle = defaultPrevDaysTextStyle;
-                    } else if (isThisMonthDay) {
-                      now = DateTime(year, month, index + 1 - _startWeekday);
-                      /*textStyle = isSelectedDay
+                        DateTime now = DateTime(year, month, 1);
+                        //TextStyle textStyle;
+                        TextStyle defaultTextStyle;
+                        if (isPrevMonthDay &&
+                            !widget.showOnlyCurrentMonthDate) {
+                          now = now.subtract(Duration(days: _startWeekday -
+                              index));
+                          //textStyle = widget.prevDaysTextStyle;
+                          defaultTextStyle = defaultPrevDaysTextStyle;
+                        } else if (isThisMonthDay) {
+                          now = DateTime(year, month, index + 1 -
+                              _startWeekday);
+                          /*textStyle = isSelectedDay
                           ? widget.selectedDayTextStyle
                           : isToday
                               ? widget.todayTextStyle
                               : widget.daysTextStyle;*/
-                      defaultTextStyle = isSelectedDay
-                          ? defaultSelectedDayTextStyle
-                          : isToday
+                          defaultTextStyle = isSelectedDay
+                              ? defaultSelectedDayTextStyle
+                              : isToday
                               ? defaultTodayTextStyle
                               : defaultDaysTextStyle;
-                    } else if (!widget.showOnlyCurrentMonthDate) {
-                      now = DateTime(year, month, index + 1 - _startWeekday);
-                      //textStyle = widget.nextDaysTextStyle;
-                      defaultTextStyle = defaultNextDaysTextStyle;
-                    } else {
-                      return Container();
-                    }
-                    bool isSelectable = true;
-                    if (widget.minSelectedDate != null &&
-                        now.millisecondsSinceEpoch <
-                            widget.minSelectedDate.millisecondsSinceEpoch)
-                      isSelectable = false;
-                    else if (widget.maxSelectedDate != null &&
-                        now.millisecondsSinceEpoch >
-                            widget.maxSelectedDate.millisecondsSinceEpoch)
-                      isSelectable = false;
-                    return Container(
-                      margin: EdgeInsets.all(widget.dayPadding),
-                      child: FlatButton(
-                        color: isSelectedDay &&
+                        } else if (!widget.showOnlyCurrentMonthDate) {
+                          now = DateTime(year, month, index + 1 -
+                              _startWeekday);
+                          //textStyle = widget.nextDaysTextStyle;
+                          defaultTextStyle = defaultNextDaysTextStyle;
+                        } else {
+                          return Container();
+                        }
+                        bool isSelectable = true;
+                        if (widget.minSelectedDate != null &&
+                            now.millisecondsSinceEpoch <
+                                widget.minSelectedDate.millisecondsSinceEpoch)
+                          isSelectable = false;
+                        else if (widget.maxSelectedDate != null &&
+                            now.millisecondsSinceEpoch >
+                                widget.maxSelectedDate.millisecondsSinceEpoch)
+                          isSelectable = false;
+                        return Container(
+                          margin: EdgeInsets.all(widget.dayPadding),
+                          child: FlatButton(
+                            color: isSelectedDay &&
                                 widget.selectedDayButtonColor != null
-                            ? widget.selectedDayButtonColor
-                            : isToday && widget.todayButtonColor != null
+                                ? widget.selectedDayButtonColor
+                                : isToday && widget.todayButtonColor != null
                                 ? widget.todayButtonColor
                                 : widget.dayButtonColor,
-                        onPressed: () => _onDayPressed(now),
-                        padding: EdgeInsets.all(widget.dayPadding),
-                        shape: widget.daysHaveCircularBorder == null
-                            ? CircleBorder()
-                            : widget.daysHaveCircularBorder
+                            onPressed: () => _onDayPressed(now),
+                            padding: EdgeInsets.all(widget.dayPadding),
+                            shape: widget.daysHaveCircularBorder == null
+                                ? CircleBorder()
+                                : widget.daysHaveCircularBorder
                                 ? CircleBorder(
-                                    side: BorderSide(
-                                      color: isSelectedDay
-                                          ? widget.selectedDayBorderColor
-                                          : isToday &&
-                                                  widget.todayBorderColor !=
-                                                      null
-                                              ? widget.todayBorderColor
-                                              : isPrevMonthDay
-                                                  ? widget
-                                                      .prevMonthDayBorderColor
-                                                  : isNextMonthDay
-                                                      ? widget
-                                                          .nextMonthDayBorderColor
-                                                      : widget
-                                                          .thisMonthDayBorderColor,
-                                    ),
-                                  )
+                              side: BorderSide(
+                                color: isSelectedDay
+                                    ? widget.selectedDayBorderColor
+                                    : isToday &&
+                                    widget.todayBorderColor !=
+                                        null
+                                    ? widget.todayBorderColor
+                                    : isPrevMonthDay
+                                    ? widget
+                                    .prevMonthDayBorderColor
+                                    : isNextMonthDay
+                                    ? widget
+                                    .nextMonthDayBorderColor
+                                    : widget
+                                    .thisMonthDayBorderColor,
+                              ),
+                            )
                                 : RoundedRectangleBorder(
-                                    side: BorderSide(
-                                      width: 0.1,
-                                      color: isSelectedDay
-                                          ? widget.selectedDayBorderColor
-                                          : isToday &&
-                                                  widget.todayBorderColor !=
-                                                      null
-                                              ? widget.todayBorderColor
-                                              : isPrevMonthDay
-                                                  ? widget
-                                                      .prevMonthDayBorderColor
-                                                  : isNextMonthDay
-                                                      ? widget
-                                                          .nextMonthDayBorderColor
-                                                      : widget
-                                                          .thisMonthDayBorderColor,
-                                    ),
-                                  ),
-                        child: Stack(
-                          children: <Widget>[
-                            _mapDatetimeAfterPost.getEvents(now).length > 0
-                                ? FadeTransition(
-                                    child: Container(
-                                      margin: EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                          color: Colors.amberAccent[100],
-                                          borderRadius:
-                                              BorderRadius.circular(3)),
-                                    ),
-                                    opacity: _animationAfterPost,
-                                  )
-                                : Container(),
-                            Column(
+                              side: BorderSide(
+                                width: 0.1,
+                                color: isSelectedDay
+                                    ? widget.selectedDayBorderColor
+                                    : isToday &&
+                                    widget.todayBorderColor !=
+                                        null
+                                    ? widget.todayBorderColor
+                                    : isPrevMonthDay
+                                    ? widget
+                                    .prevMonthDayBorderColor
+                                    : isNextMonthDay
+                                    ? widget
+                                    .nextMonthDayBorderColor
+                                    : widget
+                                    .thisMonthDayBorderColor,
+                              ),
+                            ),
+                            child: Stack(
                               children: <Widget>[
-                                Container(
-                                  child: DefaultTextStyle(
-                                    style: (_localeDate.dateSymbols.WEEKENDRANGE
-                                                .contains((index -
-                                                        1 +
-                                                        firstDayOfWeek) %
-                                                    7)) &&
+                                _mapDatetimeAfterPost
+                                    .getEvents(now)
+                                    .length > 0
+                                    ? FadeTransition(
+                                  child: Container(
+                                    margin: EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                        color: Colors.amberAccent[100],
+                                        borderRadius:
+                                        BorderRadius.circular(3)),
+                                  ),
+                                  opacity: _animationAfterPost,
+                                )
+                                    : Container(),
+                                Column(
+                                  children: <Widget>[
+                                    Container(
+                                      child: DefaultTextStyle(
+                                        style: (_localeDate.dateSymbols
+                                            .WEEKENDRANGE
+                                            .contains((index -
+                                            1 +
+                                            firstDayOfWeek) %
+                                            7)) &&
                                             !isSelectedDay &&
                                             !isToday
-                                        ? (isPrevMonthDay
+                                            ? (isPrevMonthDay
                                             ? defaultPrevDaysTextStyle
                                             : isNextMonthDay
-                                                ? defaultNextDaysTextStyle
-                                                : isSelectable
-                                                    ? defaultWeekendTextStyle
-                                                    : defaultInactiveWeekendTextStyle)
-                                        : isToday
+                                            ? defaultNextDaysTextStyle
+                                            : isSelectable
+                                            ? defaultWeekendTextStyle
+                                            : defaultInactiveWeekendTextStyle)
+                                            : isToday
                                             ? defaultTodayTextStyle
                                             : isSelectable
-                                                ? defaultTextStyle
-                                                : defaultInactiveDaysTextStyle,
-                                    child: Text(
-                                      '${now.day}',
-                                      style: (_localeDate
-                                                  .dateSymbols.WEEKENDRANGE
-                                                  .contains((index -
-                                                          1 +
-                                                          firstDayOfWeek) %
-                                                      7)) &&
+                                            ? defaultTextStyle
+                                            : defaultInactiveDaysTextStyle,
+                                        child: Text(
+                                          '${now.day}',
+                                          style: (_localeDate
+                                              .dateSymbols.WEEKENDRANGE
+                                              .contains((index -
+                                              1 +
+                                              firstDayOfWeek) %
+                                              7)) &&
                                               !isSelectedDay &&
                                               isThisMonthDay &&
                                               !isToday
-                                          ? (isSelectable
+                                              ? (isSelectable
                                               ? widget.weekendTextStyle
                                               : widget.inactiveWeekendTextStyle)
-                                          : isPrevMonthDay
+                                              : isPrevMonthDay
                                               ? widget.prevDaysTextStyle
                                               : isNextMonthDay
-                                                  ? widget.nextDaysTextStyle
-                                                  : isSelectedDay
-                                                      ? widget
-                                                          .selectedDayTextStyle
-                                                      : isToday
-                                                          ? widget
-                                                              .todayTextStyle
-                                                          : isSelectable
-                                                              ? widget
-                                                                  .daysTextStyle
-                                                              : widget
-                                                                  .inactiveDaysTextStyle,
-                                      maxLines: 1,
+                                              ? widget.nextDaysTextStyle
+                                              : isSelectedDay
+                                              ? widget
+                                              .selectedDayTextStyle
+                                              : isToday
+                                              ? widget
+                                              .todayTextStyle
+                                              : isSelectable
+                                              ? widget
+                                              .daysTextStyle
+                                              : widget
+                                              .inactiveDaysTextStyle,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                      alignment: Alignment.topCenter,
+                                      margin: EdgeInsets.only(top: 5),
                                     ),
-                                  ),
-                                  alignment: Alignment.topCenter,
-                                  margin: EdgeInsets.only(top: 5),
-                                ),
-                                widget.mapPegawaiEvent
-                                            .isMapsNull(_selectedPegawai) !=
+                                    widget.mapPegawaiEvent
+                                        .isMapsNull(_selectedPegawai) !=
                                         null
-                                    ? !isPrevMonthDay
+                                        ? !isPrevMonthDay
                                         ? !isNextMonthDay
-                                            ? _renderMarkedMapContainer(now)
-                                            : _renderMarked(now)
+                                        ? _renderMarkedMapContainer(now)
                                         : _renderMarked(now)
-                                    : _renderMarked(now),
+                                        : _renderMarked(now)
+                                        : _renderMarked(now),
+                                  ],
+                                ),
+                                widget.mapKeteranganEvent
+                                    .isMapsNull(_selectedPegawai) !=
+                                    null
+                                    ? !isPrevMonthDay
+                                    ? !isNextMonthDay
+                                    ? _renderKeteranganMap(now)
+                                    : Container()
+                                    : Container()
+                                    : Container()
                               ],
                             ),
-                            widget.mapKeteranganEvent
-                                        .isMapsNull(_selectedPegawai) !=
-                                    null
-                                ? !isPrevMonthDay
-                                    ? !isNextMonthDay
-                                        ? _renderKeteranganMap(now)
-                                        : Container()
-                                    : Container()
-                                : Container()
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
+                          ),
+                        );
+                      }),
                 ),
               ),
             ),
@@ -892,11 +1182,11 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           selected,
           !widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)
               ? widget.mapPegawaiEvent.maps[_selectedPegawai]
-                  .getEvents(selected)
+              .getEvents(selected)
               : [],
           !widget.mapKeteranganEvent.isMapsNull(_selectedPegawai)
               ? widget.mapKeteranganEvent.maps[_selectedPegawai]
-                  .getEvents(selected)
+              .getEvents(selected)
               : []);
 
       //_setDate();
@@ -906,11 +1196,11 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   void _setDatesAndWeeks() {
     /// Setup default calendar format
     DateTime date0 =
-        DateTime(this._selectedDate.year, this._selectedDate.month - 1, 1);
+    DateTime(this._selectedDate.year, this._selectedDate.month - 1, 1);
     DateTime date1 =
-        DateTime(this._selectedDate.year, this._selectedDate.month, 1);
+    DateTime(this._selectedDate.year, this._selectedDate.month, 1);
     DateTime date2 =
-        DateTime(this._selectedDate.year, this._selectedDate.month + 1, 1);
+    DateTime(this._selectedDate.year, this._selectedDate.month + 1, 1);
 
     /// Setup week-only format
     DateTime now = this._selectedDate;
@@ -992,7 +1282,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
         _controller
             .animateToPage(page,
-                duration: Duration(milliseconds: 1), curve: Threshold(0.0))
+            duration: Duration(milliseconds: 1), curve: Threshold(0.0))
             .then((value) {});
 
         _getDetailAbsensi(_selectedPegawai, _dates[1]);
@@ -1040,12 +1330,14 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
   Widget _renderMarkedMap(DateTime now) {
     if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
-      if (widget.mapPegawaiEvent.maps[_selectedPegawai].getEvents(now).length >
+      if (widget.mapPegawaiEvent.maps[_selectedPegawai]
+          .getEvents(now)
+          .length >
           0) {
         List<DetailAbsensi> detailAbsensi =
-            widget.mapPegawaiEvent.maps[_selectedPegawai].getEvents(now);
+        widget.mapPegawaiEvent.maps[_selectedPegawai].getEvents(now);
         return FadeTransition(
-            opacity: _animationEvent,
+            opacity: _animationAbsensiEvent,
             child: Column(children: _eventsWidget(detailAbsensi)));
       }
     }
@@ -1098,8 +1390,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   Widget _renderKeteranganMap(DateTime now) {
     if (!widget.mapKeteranganEvent.isMapsNull(_selectedPegawai)) {
       if (widget.mapKeteranganEvent.maps[_selectedPegawai]
-              .getEvents(now)
-              .length >
+          .getEvents(now)
+          .length >
           0) {
         return FadeTransition(
             opacity: _animationKeterangan,
@@ -1117,7 +1409,10 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   }
 
   _calculateChildAspectRatio() {
-    var x = (MediaQuery.of(context).size.width / 7) /
+    var x = (MediaQuery
+        .of(context)
+        .size
+        .width / 7) /
         ((widget.height - widget.headerHeight - widget.weekdayRowHeight) / 6);
     return x;
   }
@@ -1135,7 +1430,9 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       _isDetailLoading = true;
       _animationEventController.reset();
       APITAD.getData(nip, date).then((response) {
-        _animationEventController.forward().orCancel;
+        _animationEventController
+            .forward()
+            .orCancel;
         if (response.statusCode == 500) {
           _showSnackBar("Gagal mengambil data absensi");
         } else if (response.statusCode == 200) {
@@ -1173,8 +1470,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           : new DateTime(dateTime.year + 1, 1, 0);
       for (int i = 1; i <= lastDayDateTime.day; i++) {
         if (widget.mapPegawaiEvent.maps[_selectedPegawai]
-                .getEvents(new DateTime(dateTime.year, dateTime.month, i))
-                .length !=
+            .getEvents(new DateTime(dateTime.year, dateTime.month, i))
+            .length !=
             0) {
           isDataExist = true;
           break;
@@ -1193,7 +1490,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     if (isWeekday) {
       //Jika weekday perlu cleaning
       events.sort(
-          (a, b) => a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
+              (a, b) =>
+              a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
 
       //Ambil absen pertama dan terakhir
       if (events.length > 2) {
@@ -1226,7 +1524,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     } else {
       //Jika weekend langsung ambil pertama dan terakhir
       events.sort(
-          (a, b) => a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
+              (a, b) =>
+              a.dateTime.millisecond.compareTo(b.dateTime.millisecond));
 
       //Ambil absen pertama dan terakhir
       if (events.length > 2) {
@@ -1288,7 +1587,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   List<DropdownMenuItem<String>> _createDropdownItems() {
     List<DropdownMenuItem<String>> tmp = [];
     widget.pegawaiList.maps
-        .forEach((id, pegawai) => tmp.add(DropdownMenuItem<String>(
+        .forEach((id, pegawai) =>
+        tmp.add(DropdownMenuItem<String>(
             child: Text(
               pegawai.nama,
               overflow: TextOverflow.ellipsis,
@@ -1312,10 +1612,12 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       _isKeteranganLoading = true;
       _animationKeteranganController.reset();
       ApiCustom.getPegawaiAbsensi(nip, date).then((response) {
-        _animationKeteranganController.forward().orCancel;
+        _animationKeteranganController
+            .forward()
+            .orCancel;
         var jsonresponse = jsonDecode(response.body);
         KeteranganAbsensiList list =
-            KeteranganAbsensiList.fromJson(jsonresponse);
+        KeteranganAbsensiList.fromJson(jsonresponse);
         _mapKeterangan = new MapEvent();
         list.list.forEach((keterangan) {
           _mapKeterangan.add(keterangan.dateTime, keterangan);
@@ -1342,8 +1644,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           : new DateTime(dateTime.year + 1, 1, 0);
       for (int i = 1; i <= lastDayDateTime.day; i++) {
         if (widget.mapKeteranganEvent.maps[_selectedPegawai]
-                .getEvents(new DateTime(dateTime.year, dateTime.month, i))
-                .length >
+            .getEvents(new DateTime(dateTime.year, dateTime.month, i))
+            .length >
             0) {
           isDataExist = true;
           break;
@@ -1355,8 +1657,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     }
   }
 
-  void _navigateToDetail(
-      Pegawai pegawai,
+  void _navigateToDetail(Pegawai pegawai,
       DateTime date,
       List<DetailAbsensi> detailAbsensi,
       List<KeteranganAbsensi> keterangan) async {
@@ -1364,7 +1665,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     final result = await Navigator.push(
         context,
         PageRouteBuilder(
-            pageBuilder: (context, anim1, anim2) => DetailAbsensiPage(
+            pageBuilder: (context, anim1, anim2) =>
+                DetailAbsensiPage(
                   pegawai: pegawai,
                   dateTime: date,
                   details: detailAbsensi,
@@ -1425,8 +1727,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     tmp.addAll([empty, empty]);
     if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
       if (widget.mapPegawaiEvent.maps[_selectedPegawai]
-              .getEvents(new DateTime(now.year, now.month, now.day))
-              .length !=
+          .getEvents(new DateTime(now.year, now.month, now.day))
+          .length !=
           0) {
         tmp = [];
         tmp = widget.mapPegawaiEvent.maps[_selectedPegawai]
@@ -1450,8 +1752,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     for (int i = 1; i <= lastDayDateTime.day; i++) {
       if (!widget.mapPegawaiEvent.isMapsNull(_selectedPegawai)) {
         if (widget.mapPegawaiEvent.maps[_selectedPegawai]
-                .getEvents(new DateTime(now.year, now.month, i))
-                .length !=
+            .getEvents(new DateTime(now.year, now.month, i))
+            .length !=
             0) {
           DetailAbsensi detailAbsensi = widget
               .mapPegawaiEvent.maps[_selectedPegawai]
@@ -1469,8 +1771,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
       if (!widget.mapKeteranganEvent.isMapsNull(_selectedPegawai)) {
         if (widget.mapKeteranganEvent.maps[_selectedPegawai]
-                .getEvents(new DateTime(now.year, now.month, i))
-                .length >
+            .getEvents(new DateTime(now.year, now.month, i))
+            .length >
             0) {
           if (tmp.sakitFreq == null) {
             tmp.sakitFreq = 0;
@@ -1486,10 +1788,10 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
           if (s == "1") {
             tmp.sakitFreq++;
           } else if ((s == "2") |
-              (s == "3") |
-              (s == "4") |
-              (s == "5") |
-              (s == "6")) {
+          (s == "3") |
+          (s == "4") |
+          (s == "5") |
+          (s == "6")) {
             tmp.cutiFreq++;
           } else if ((s == "7") | (s == "8")) {
             tmp.tugasFreq++;
@@ -1541,7 +1843,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => LoginPage()),
-                    (Route<dynamic> route) => false);
+                        (Route<dynamic> route) => false);
               },
               child: Text("SIGN OUT"),
             ),
