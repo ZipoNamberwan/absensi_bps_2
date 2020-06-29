@@ -1,5 +1,6 @@
 library flutter_calendar_dooboo;
 
+import 'file:///C:/Users/namberwan/AndroidStudioProjects/absensi_bps_2/lib/laporankegiatan/entri_laporan_harian.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:flutter/material.dart';
 
@@ -34,7 +35,8 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(),
+      /*home: LoginPage(),*/
+      home: EntriLaporanHarianPage(),
     );
   }
 }

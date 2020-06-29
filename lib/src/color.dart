@@ -16,3 +16,5 @@ const Color tertiaryTextColor = Color(0XFFA7A7A7);
 const Color logoTintColor = Color(0XFFFCE3E0);
 
 LinearGradient appGradient = LinearGradient(colors: [firstColor, secondColor]);
+
+const Color mainColor = Color(0xFF3865D9);

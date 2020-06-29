@@ -181,7 +181,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
         onWillPop: _onWillPop);
   }
 
-  Future<bool> _onWillPop() {
+  Future<void> _onWillPop() async {
     _onbackPressed();
   }
 
