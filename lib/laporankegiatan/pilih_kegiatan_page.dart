@@ -124,7 +124,10 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                                   flex: 3,
                                   child: GestureDetector(
                                     onTap: state.detailKegiatan.isValid()
-                                        ? () {}
+                                        ? () {
+                                            Navigator.pop(
+                                                context, state.detailKegiatan);
+                                          }
                                         : () {},
                                     child: Stack(
                                       children: <Widget>[
@@ -181,7 +184,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                     ),
                     SliverList(
                         delegate: SliverChildBuilderDelegate((context, i) {
-                      return KegiatanItemWidget(
+                      return HistoryKegiatanItemWidget(
                         kegiatan: DetailKegiatan.getExampleKegiatan()[i],
                         onTapIcon: () {
                           _namaController.text =
@@ -202,11 +205,11 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
   }
 }
 
-class KegiatanItemWidget extends StatelessWidget {
+class HistoryKegiatanItemWidget extends StatelessWidget {
   final DetailKegiatan kegiatan;
   final Function onTapIcon;
 
-  const KegiatanItemWidget({Key key, this.kegiatan, this.onTapIcon})
+  const HistoryKegiatanItemWidget({Key key, this.kegiatan, this.onTapIcon})
       : super(key: key);
 
   @override

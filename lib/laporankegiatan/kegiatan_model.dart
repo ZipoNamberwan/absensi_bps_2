@@ -1,6 +1,6 @@
 class Kegiatan {
   final String id;
-  final Kegiatan kegiatan;
+  final DetailKegiatan detailKegiatan;
   final double volume;
   final double durasi;
   final String satuanDurasi;
@@ -9,7 +9,7 @@ class Kegiatan {
 
   Kegiatan({
     this.id,
-    this.kegiatan,
+    this.detailKegiatan,
     this.volume,
     this.durasi,
     this.satuanDurasi,
@@ -17,9 +17,13 @@ class Kegiatan {
     this.keterangan,
   });
 
+  bool isValid() {
+    return detailKegiatan.isValid() && volume != null && volume != 0;
+  }
+
   Kegiatan copyWith(
       {String id,
-      Kegiatan kegiatan,
+      DetailKegiatan detailKegiatan,
       double volume,
       double durasi,
       String satuanDurasi,
@@ -28,7 +32,7 @@ class Kegiatan {
     return Kegiatan(
       id: id ?? this.id,
       durasi: durasi ?? this.durasi,
-      kegiatan: kegiatan ?? this.kegiatan,
+      detailKegiatan: detailKegiatan ?? this.detailKegiatan,
       keterangan: keterangan ?? this.keterangan,
       pemberiTugas: pemberiTugas ?? this.pemberiTugas,
       satuanDurasi: satuanDurasi ?? this.satuanDurasi,
