@@ -8,7 +8,7 @@ abstract class LaporanHarianEvent extends Equatable {
 }
 
 class UpdateTanggalLaporanHarian extends LaporanHarianEvent {
-  final String tanggal;
+  final DateTime tanggal;
 
   UpdateTanggalLaporanHarian(this.tanggal);
 
@@ -26,10 +26,10 @@ class TambahKegiatanHarian extends LaporanHarianEvent {
 }
 
 class HapusKegiatanHarian extends LaporanHarianEvent {
-  final Kegiatan kegiatan;
+  final int index;
 
-  HapusKegiatanHarian(this.kegiatan);
+  HapusKegiatanHarian(this.index);
 
   @override
-  List<Object> get props => [kegiatan];
+  List<Object> get props => [index];
 }

@@ -1,18 +1,12 @@
 import 'package:absensi_bps_2/laporankegiatan/kegiatan_model.dart';
 
 class LaporanHarianState {
-  final String tanggal;
-  final List<Kegiatan> listKegiatan;
+  final LaporanHarian laporanHarian;
 
-  LaporanHarianState({this.tanggal, this.listKegiatan});
-
-  LaporanHarianState copyWith({String tanggal, List<Kegiatan> listKegiatan}) {
-    return LaporanHarianState(
-        tanggal: tanggal ?? this.tanggal,
-        listKegiatan: listKegiatan ?? this.listKegiatan);
-  }
+  LaporanHarianState({this.laporanHarian});
 }
 
 class InitialLaporanHarianState extends LaporanHarianState {
-  InitialLaporanHarianState() : super(listKegiatan: List<Kegiatan>());
+  InitialLaporanHarianState()
+      : super(laporanHarian: LaporanHarian(listKegiatan: List<Kegiatan>()));
 }
