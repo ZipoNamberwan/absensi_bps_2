@@ -17,12 +17,15 @@ class EntriLaporanHarianPage extends StatefulWidget {
 class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
   final _animatedListKey = GlobalKey<SliverAnimatedListState>();
 
+  List<TextEditingController> _listTextController;
+
   LaporanHarianBloc _bloc;
 
   @override
   void initState() {
     super.initState();
     _bloc = LaporanHarianBloc();
+    _listTextController = List();
   }
 
   @override
@@ -184,7 +187,11 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
                                 .drive(Tween<double>(begin: 0.0, end: 1.0)),
                             curve: Interval(0.0, 1.0)),
                         child: KegiatanItemWidget(
+                          controller: _listTextController[i],
                           kegiatan: state.laporanHarian.listKegiatan[i],
+                          onKeteranganChange: (value) {
+                            //_bloc.add(EditKeterangan(i, value));
+                          },
                           onRemoveTap: () {
                             /*Kegiatan kegiatan =
                                   state.laporanHarian.listKegiatan.removeAt(i);*/
@@ -205,7 +212,6 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
                                     axisAlignment: 0.0,
                                     child: KegiatanItemWidget(
                                       kegiatan: kegiatan,
-                                      onRemoveTap: () {},
                                     ),
                                   ),
                                 );
@@ -213,6 +219,7 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
                               duration: Duration(milliseconds: 600),
                             );
                             _bloc.add(HapusKegiatanHarian(i));
+                            _listTextController.removeAt(i);
                           },
                         ),
                       ),
@@ -221,81 +228,79 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
                   initialItemCount: state.laporanHarian.listKegiatan.length,
                 ),
                 SliverToBoxAdapter(
-                    child: state.laporanHarian.listKegiatan.isEmpty
-                        ? GestureDetector(
-                            onTap: _navigateToTambahKegiatanPage,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 10),
-                              width: MediaQuery.of(context).size.width,
-                              margin: EdgeInsets.only(
-                                  left: 20, right: 20, bottom: 20),
-                              decoration: BoxDecoration(
-                                  color: mainColor,
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Icon(
-                                    Icons.add_circle,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(
-                                    width: 10,
-                                  ),
-                                  Text(
-                                    "TAMBAH KEGIATAN",
+                  child: state.laporanHarian.listKegiatan.isEmpty
+                      ? GestureDetector(
+                          onTap: _navigateToTambahKegiatanPage,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            width: MediaQuery.of(context).size.width,
+                            margin: EdgeInsets.only(
+                                left: 20, right: 20, bottom: 20),
+                            decoration: BoxDecoration(
+                                color: mainColor,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(
+                                  Icons.add_circle,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  "TAMBAH KEGIATAN",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                      : GestureDetector(
+                          onTap: state.laporanHarian.isValid()
+                              ? _submitlaporanHarian(state.laporanHarian)
+                              : () {},
+                          child: Stack(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                width: MediaQuery.of(context).size.width,
+                                height: 45,
+                                margin: EdgeInsets.only(
+                                    left: 20, right: 20, bottom: 20, top: 10),
+                                decoration: BoxDecoration(
+                                    color: mainColor,
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: Center(
+                                  child: Text(
+                                    "SUBMIT",
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold),
-                                  )
-                                ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          )
-                        : GestureDetector(
-                            onTap: state.laporanHarian.isValid()
-                                ? _submitlaporanHarian(state.laporanHarian)
-                                : () {},
-                            child: Stack(
-                              children: [
-                                Container(
+                              AnimatedOpacity(
+                                opacity:
+                                    state.laporanHarian.isValid() ? 0.0 : 0.5,
+                                duration: Duration(milliseconds: 300),
+                                child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 10),
                                   width: MediaQuery.of(context).size.width,
                                   height: 45,
                                   margin: EdgeInsets.only(
                                       left: 20, right: 20, bottom: 20, top: 10),
-                                  decoration: BoxDecoration(
-                                      color: mainColor,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: Center(
-                                    child: Text(
-                                      "SUBMIT",
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
+                                  decoration:
+                                      BoxDecoration(color: Colors.white),
                                 ),
-                                AnimatedOpacity(
-                                  opacity:
-                                      state.laporanHarian.isValid() ? 0.0 : 0.5,
-                                  duration: Duration(milliseconds: 300),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 10),
-                                    width: MediaQuery.of(context).size.width,
-                                    height: 45,
-                                    margin: EdgeInsets.only(
-                                        left: 20,
-                                        right: 20,
-                                        bottom: 20,
-                                        top: 10),
-                                    decoration:
-                                        BoxDecoration(color: Colors.white),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ))
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
               ],
             ),
           );
@@ -314,6 +319,12 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
       _bloc.add(TambahKegiatanHarian(result));
       _animatedListKey.currentState
           .insertItem(0, duration: Duration(milliseconds: 1000));
+      _listTextController.insert(0, TextEditingController());
+      _listTextController[0].addListener(() {
+        _bloc.add(EditKeterangan(
+            _listTextController.indexOf(_listTextController[0]),
+            _listTextController[0].text));
+      });
     }
   }
 
@@ -323,8 +334,15 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
 class KegiatanItemWidget extends StatelessWidget {
   final Kegiatan kegiatan;
   final Function onRemoveTap;
+  final Function(String) onKeteranganChange;
+  final TextEditingController controller;
 
-  const KegiatanItemWidget({Key key, this.onRemoveTap, this.kegiatan})
+  const KegiatanItemWidget(
+      {Key key,
+      this.onRemoveTap,
+      this.kegiatan,
+      this.onKeteranganChange,
+      this.controller})
       : super(key: key);
 
   @override
@@ -446,7 +464,10 @@ class KegiatanItemWidget extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: Center(
                 child: TextField(
+                  controller: controller,
                   maxLines: 2,
+                  onChanged: onKeteranganChange,
+                  style: TextStyle(fontSize: 12),
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     hintText: "Keterangan pekerjaan jika ada...",

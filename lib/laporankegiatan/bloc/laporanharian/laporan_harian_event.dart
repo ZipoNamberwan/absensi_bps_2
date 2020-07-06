@@ -33,3 +33,13 @@ class HapusKegiatanHarian extends LaporanHarianEvent {
   @override
   List<Object> get props => [index];
 }
+
+class EditKeterangan extends LaporanHarianEvent {
+  final int index;
+  final String keterangan;
+
+  EditKeterangan(this.index, this.keterangan);
+
+  @override
+  List<Object> get props => [index, keterangan];
+}

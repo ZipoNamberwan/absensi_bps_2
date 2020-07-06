@@ -17,6 +17,8 @@ class LaporanHarianBloc extends Bloc<LaporanHarianEvent, LaporanHarianState> {
       yield* mapTambahKegiatanHarianToState(event.kegiatan);
     } else if (event is HapusKegiatanHarian) {
       yield* mapHapusKegiatanHarianToState(event.index);
+    } else if (event is EditKeterangan) {
+      yield* mapEditKeteranganToState(event.index, event.keterangan);
     }
   }
 
@@ -37,6 +39,17 @@ class LaporanHarianBloc extends Bloc<LaporanHarianEvent, LaporanHarianState> {
   Stream<LaporanHarianState> mapHapusKegiatanHarianToState(int index) async* {
     List<Kegiatan> list = state.laporanHarian.listKegiatan;
     list.removeAt(index);
+    yield LaporanHarianState(
+        laporanHarian: state.laporanHarian.copyWith(listKegiatan: list));
+  }
+
+  Stream<LaporanHarianState> mapEditKeteranganToState(
+      int index, String keterangan) async* {
+    Kegiatan kegiatan = state.laporanHarian.listKegiatan[index]
+        .copyWith(keterangan: keterangan);
+    List<Kegiatan> list = state.laporanHarian.listKegiatan;
+    list[index] = kegiatan;
+
     yield LaporanHarianState(
         laporanHarian: state.laporanHarian.copyWith(listKegiatan: list));
   }

@@ -185,7 +185,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                     SliverList(
                         delegate: SliverChildBuilderDelegate((context, i) {
                       return HistoryKegiatanItemWidget(
-                        kegiatan: DetailKegiatan.getExampleKegiatan()[i],
+                        detailKegiatan: DetailKegiatan.getExampleKegiatan()[i],
                         onTapIcon: () {
                           _namaController.text =
                               DetailKegiatan.getExampleKegiatan()[i].nama;
@@ -206,10 +206,10 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
 }
 
 class HistoryKegiatanItemWidget extends StatelessWidget {
-  final DetailKegiatan kegiatan;
+  final DetailKegiatan detailKegiatan;
   final Function onTapIcon;
 
-  const HistoryKegiatanItemWidget({Key key, this.kegiatan, this.onTapIcon})
+  const HistoryKegiatanItemWidget({Key key, this.detailKegiatan, this.onTapIcon})
       : super(key: key);
 
   @override
@@ -221,18 +221,23 @@ class HistoryKegiatanItemWidget extends StatelessWidget {
         children: <Widget>[
           Expanded(
             flex: 9,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(kegiatan.nama),
-                SizedBox(
-                  height: 5,
-                ),
-                Text(
-                  kegiatan.satuan,
-                  style: TextStyle(fontSize: 12, color: Colors.black38),
-                )
-              ],
+            child: InkWell(
+              onTap: () {
+                Navigator.pop(context, detailKegiatan);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(detailKegiatan.nama),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    detailKegiatan.satuan,
+                    style: TextStyle(fontSize: 12, color: Colors.black38),
+                  )
+                ],
+              ),
             ),
           ),
           SizedBox(
@@ -240,7 +245,7 @@ class HistoryKegiatanItemWidget extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: GestureDetector(
+            child: InkWell(
               onTap: onTapIcon,
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 10, horizontal: 7),
