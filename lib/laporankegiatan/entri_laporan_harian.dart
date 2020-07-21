@@ -189,9 +189,6 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
                         child: KegiatanItemWidget(
                           controller: _listTextController[i],
                           kegiatan: state.laporanHarian.listKegiatan[i],
-                          onKeteranganChange: (value) {
-                            //_bloc.add(EditKeterangan(i, value));
-                          },
                           onRemoveTap: () {
                             /*Kegiatan kegiatan =
                                   state.laporanHarian.listKegiatan.removeAt(i);*/
@@ -334,15 +331,10 @@ class _EntriLaporanHarianPageState extends State<EntriLaporanHarianPage> {
 class KegiatanItemWidget extends StatelessWidget {
   final Kegiatan kegiatan;
   final Function onRemoveTap;
-  final Function(String) onKeteranganChange;
   final TextEditingController controller;
 
   const KegiatanItemWidget(
-      {Key key,
-      this.onRemoveTap,
-      this.kegiatan,
-      this.onKeteranganChange,
-      this.controller})
+      {Key key, this.onRemoveTap, this.kegiatan, this.controller})
       : super(key: key);
 
   @override
@@ -466,7 +458,6 @@ class KegiatanItemWidget extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   maxLines: 2,
-                  onChanged: onKeteranganChange,
                   style: TextStyle(fontSize: 12),
                   decoration: InputDecoration(
                     border: InputBorder.none,
