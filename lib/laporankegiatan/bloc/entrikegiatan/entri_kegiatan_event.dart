@@ -7,6 +7,13 @@ abstract class EntriKegiatanEvent extends Equatable {
   const EntriKegiatanEvent();
 }
 
+class InitPage extends EntriKegiatanEvent {
+  InitPage();
+
+  @override
+  List<Object> get props => [];
+}
+
 class UpdateDetailKegiatan extends EntriKegiatanEvent {
   final DetailKegiatan detailKegiatan;
 
@@ -35,7 +42,7 @@ class UpdateDurasiKegiatan extends EntriKegiatanEvent {
 }
 
 class UpdateSatuanDurasiKegiatan extends EntriKegiatanEvent {
-  final String satuanDurasi;
+  final SatuanDurasi satuanDurasi;
 
   UpdateSatuanDurasiKegiatan(this.satuanDurasi);
 
@@ -50,4 +57,31 @@ class UpdatePemberiTugasKegiatan extends EntriKegiatanEvent {
 
   @override
   List<Object> get props => [pemberiTugas];
+}
+
+class UpdateStatusKegiatan extends EntriKegiatanEvent {
+  final StatusKegiatan statusKegiatan;
+
+  UpdateStatusKegiatan(this.statusKegiatan);
+
+  @override
+  List<Object> get props => [statusKegiatan];
+}
+
+class UpdateTanggal extends EntriKegiatanEvent {
+  final DateTime tanggal;
+
+  UpdateTanggal(this.tanggal);
+
+  @override
+  List<Object> get props => [tanggal];
+}
+
+class PostKegiatan extends EntriKegiatanEvent {
+  final String nip;
+
+  PostKegiatan(this.nip);
+
+  @override
+  List<Object> get props => [];
 }

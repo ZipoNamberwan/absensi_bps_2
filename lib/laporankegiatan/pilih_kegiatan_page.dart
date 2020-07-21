@@ -14,6 +14,7 @@ class PlihKegiatanPage extends StatefulWidget {
 
 class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
   PilihKegiatanBloc _bloc;
+
   TextEditingController _namaController;
   TextEditingController _satuanController;
 
@@ -22,13 +23,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
     super.initState();
     _bloc = PilihKegiatanBloc();
     _namaController = TextEditingController();
-    _namaController.addListener(() {
-      _bloc.add(UpdateNamaKegiatan(_namaController.text));
-    });
     _satuanController = TextEditingController();
-    _satuanController.addListener(() {
-      _bloc.add(UpdateSatuanKegiatan(_satuanController.text));
-    });
   }
 
   @override
@@ -41,7 +36,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
   Widget build(BuildContext context) {
     return BlocProvider<PilihKegiatanBloc>(
       create: (context) {
-        return _bloc..add(GetHistoryKegiatan(""));
+        return _bloc..add(GetHistoryKegiatan("57639", ""));
       },
       child: BlocBuilder<PilihKegiatanBloc, PilihKegiatanState>(
         builder: (context, state) {
@@ -74,10 +69,14 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                             margin: EdgeInsets.only(bottom: 15),
                             child: Center(
                               child: TextField(
+                                onChanged: (value) {
+                                  _bloc.add(UpdateNamaKegiatan("57639", value));
+                                },
                                 controller: _namaController,
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  hintText: "Tulis nama kegiatan di sini...",
+                                  hintText:
+                                      "Tulis atau cari kegiatan di sini...",
                                   hintStyle: TextStyle(fontSize: 12),
                                 ),
                               ),
@@ -107,6 +106,10 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                                         EdgeInsets.symmetric(horizontal: 10),
                                     child: Center(
                                       child: TextField(
+                                        onChanged: (value) {
+                                          _bloc
+                                              .add(UpdateSatuanKegiatan(value));
+                                        },
                                         controller: _satuanController,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
@@ -182,18 +185,66 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                         ),
                       ),
                     ),
-                    SliverList(
-                        delegate: SliverChildBuilderDelegate((context, i) {
-                      return HistoryKegiatanItemWidget(
-                        detailKegiatan: DetailKegiatan.getExampleKegiatan()[i],
-                        onTapIcon: () {
-                          _namaController.text =
-                              DetailKegiatan.getExampleKegiatan()[i].nama;
-                          _satuanController.text =
-                              DetailKegiatan.getExampleKegiatan()[i].satuan;
-                        },
-                      );
-                    }, childCount: 5)),
+                    BlocBuilder<PilihKegiatanBloc, PilihKegiatanState>(
+                      builder: (context, state) {
+                        if (state is LoadingHistoryKegiatan) {
+                          return SliverToBoxAdapter(
+                            child: Center(
+                              child: Container(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                          );
+                        } else if (state is ErrorHistoryKegiatan) {
+                          return SliverToBoxAdapter(
+                            child: Container(
+                              child: Column(
+                                children: [
+                                  Text(state.message),
+                                  SizedBox(
+                                    height: 20,
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      _bloc
+                                          .add(GetHistoryKegiatan("57639", ""));
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                          color: mainColor,
+                                          borderRadius:
+                                              BorderRadius.circular(5)),
+                                      child: Text(
+                                        "RETRY",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        return SliverList(
+                            delegate: SliverChildBuilderDelegate((context, i) {
+                          return HistoryKegiatanItemWidget(
+                            detailKegiatan: state.listHistoryKegiatan[i],
+                            onTapIcon: () {
+                              _namaController.text =
+                                  state.listHistoryKegiatan[i].nama;
+                              _satuanController.text =
+                                  state.listHistoryKegiatan[i].satuan;
+
+                              _bloc.add(UpdateNamaKegiatan(
+                                  "57639", _namaController.text));
+                              _bloc.add(
+                                  UpdateSatuanKegiatan(_satuanController.text));
+                            },
+                          );
+                        }, childCount: state.listHistoryKegiatan.length));
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -209,7 +260,8 @@ class HistoryKegiatanItemWidget extends StatelessWidget {
   final DetailKegiatan detailKegiatan;
   final Function onTapIcon;
 
-  const HistoryKegiatanItemWidget({Key key, this.detailKegiatan, this.onTapIcon})
+  const HistoryKegiatanItemWidget(
+      {Key key, this.detailKegiatan, this.onTapIcon})
       : super(key: key);
 
   @override

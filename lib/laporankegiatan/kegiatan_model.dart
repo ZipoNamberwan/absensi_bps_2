@@ -17,14 +17,18 @@ class LaporanHarian {
 
 class Kegiatan {
   final String id;
+  final DateTime tanggal;
   final DetailKegiatan detailKegiatan;
   final double volume;
   final double durasi;
-  final String satuanDurasi;
+  final SatuanDurasi satuanDurasi;
   final String pemberiTugas;
   final String keterangan;
+  final StatusKegiatan statusKegiatan;
 
   Kegiatan({
+    this.tanggal,
+    this.statusKegiatan,
     this.id,
     this.detailKegiatan,
     this.volume,
@@ -35,7 +39,10 @@ class Kegiatan {
   });
 
   bool isValid() {
-    return detailKegiatan.isValid() && volume != null && volume != 0;
+    return detailKegiatan.isValid() &&
+        volume != null &&
+        volume != 0 &&
+        tanggal != null;
   }
 
   Kegiatan copyWith(
@@ -43,18 +50,37 @@ class Kegiatan {
       DetailKegiatan detailKegiatan,
       double volume,
       double durasi,
-      String satuanDurasi,
+      SatuanDurasi satuanDurasi,
       String pemberiTugas,
-      String keterangan}) {
+      String keterangan,
+      DateTime tanggal,
+      StatusKegiatan statusKegiatan}) {
     return Kegiatan(
-      id: id ?? this.id,
-      durasi: durasi ?? this.durasi,
-      detailKegiatan: detailKegiatan ?? this.detailKegiatan,
-      keterangan: keterangan ?? this.keterangan,
-      pemberiTugas: pemberiTugas ?? this.pemberiTugas,
-      satuanDurasi: satuanDurasi ?? this.satuanDurasi,
-      volume: volume ?? this.volume,
-    );
+        id: id ?? this.id,
+        durasi: durasi ?? this.durasi,
+        detailKegiatan: detailKegiatan ?? this.detailKegiatan,
+        keterangan: keterangan ?? this.keterangan,
+        pemberiTugas: pemberiTugas ?? this.pemberiTugas,
+        satuanDurasi: satuanDurasi ?? this.satuanDurasi,
+        volume: volume ?? this.volume,
+        tanggal: tanggal ?? this.tanggal,
+        statusKegiatan: statusKegiatan ?? this.statusKegiatan);
+  }
+
+  factory Kegiatan.fromJson(Map<String, dynamic> parsedJson) {
+    return Kegiatan(
+        id: parsedJson['id'],
+        detailKegiatan: DetailKegiatan(
+            nama: parsedJson['namakegiatan'],
+            satuan: parsedJson['satuankegiatan']),
+        statusKegiatan:
+            StatusKegiatan.fromJson(parsedJson['datastatuskegiatan']),
+        satuanDurasi: SatuanDurasi.fromJson(parsedJson['datasatuandurasi']),
+        keterangan: parsedJson['keterangan'],
+        durasi: parsedJson['durasi'],
+        volume: parsedJson['volume'],
+        pemberiTugas: parsedJson['pemberitugas'],
+        tanggal: DateTime.parse(parsedJson['tanggal']));
   }
 }
 
@@ -73,27 +99,40 @@ class DetailKegiatan {
         nama: nama ?? this.nama, satuan: satuan ?? this.satuan);
   }
 
-  static List<DetailKegiatan> getExampleKegiatan() {
-    List<DetailKegiatan> list = List();
-    list.add(
-        DetailKegiatan(nama: "Melakukan backup data Susenas", satuan: "File"));
-    list.add(DetailKegiatan(nama: "Membuat publikasi Susenas", satuan: "buku"));
-    list.add(DetailKegiatan(
-        nama: "Melakukan perbaikan jaringan internet di Bidang Nerwilis",
-        satuan: "Kegiatan"));
-    list.add(DetailKegiatan(
-        nama: "Melakukan perbaikan jaringan internet di Bidang Nerwilis",
-        satuan: "Kegiatan"));
+  factory DetailKegiatan.fromJson(Map<String, dynamic> parsedJson) {
+    return DetailKegiatan(
+        nama: parsedJson['namakegiatan'], satuan: parsedJson['satuankegiatan']);
+  }
+}
 
-    list.add(
-        DetailKegiatan(nama: "Menandatangi nota bensin", satuan: "Kegiatan"));
+class SatuanDurasi {
+  final String id;
+  final String nama;
 
-    list.add(DetailKegiatan(
-        nama: "Membuat proyek bisnis SAAS LMS guruku.id", satuan: "Kegiatan"));
+  SatuanDurasi({this.id, this.nama});
 
-    list.add(DetailKegiatan(
-        nama: "Melanjutkan proyek bisnis flyereats.in", satuan: "Kegiatan"));
+  static List<SatuanDurasi> getExampleSatuanDurasi() {
+    List<SatuanDurasi> list = List();
+    list.add(SatuanDurasi(id: "1", nama: "Jam"));
+    list.add(SatuanDurasi(id: "2", nama: "Menit"));
 
     return list;
+  }
+
+  factory SatuanDurasi.fromJson(Map<String, dynamic> parsedJson) {
+    return SatuanDurasi(
+        id: parsedJson['id'].toString(), nama: parsedJson['satuan']);
+  }
+}
+
+class StatusKegiatan {
+  final String id;
+  final String status;
+
+  StatusKegiatan({this.id, this.status});
+
+  factory StatusKegiatan.fromJson(Map<String, dynamic> parsedJson) {
+    return StatusKegiatan(
+        id: parsedJson['id'].toString(), status: parsedJson['statuskegiatan']);
   }
 }

@@ -416,7 +416,7 @@ class KegiatanItemWidget extends StatelessWidget {
                               Apputil.doubleRemoveZeroTrailing(
                                       kegiatan.durasi) +
                                   " " +
-                                  kegiatan.satuanDurasi,
+                                  kegiatan.satuanDurasi.nama,
                               style: TextStyle(
                                   color: Colors.black38, fontSize: 13),
                             )

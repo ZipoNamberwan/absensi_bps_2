@@ -8,20 +8,22 @@ abstract class PilihKegiatanEvent extends Equatable {
 
 class GetHistoryKegiatan extends PilihKegiatanEvent {
   final String nip;
+  final String searchText;
 
-  GetHistoryKegiatan(this.nip);
+  GetHistoryKegiatan(this.nip, this.searchText);
 
   @override
   List<Object> get props => [nip];
 }
 
 class UpdateNamaKegiatan extends PilihKegiatanEvent {
+  final String nip;
   final String nama;
 
-  UpdateNamaKegiatan(this.nama);
+  UpdateNamaKegiatan(this.nip, this.nama);
 
   @override
-  List<Object> get props => [nama];
+  List<Object> get props => [nip, nama];
 }
 
 class UpdateSatuanKegiatan extends PilihKegiatanEvent {
