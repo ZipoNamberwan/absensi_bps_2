@@ -69,16 +69,23 @@ class Kegiatan {
 
   factory Kegiatan.fromJson(Map<String, dynamic> parsedJson) {
     return Kegiatan(
-        id: parsedJson['id'],
+        id: parsedJson['id'].toString(),
         detailKegiatan: DetailKegiatan(
             nama: parsedJson['namakegiatan'],
             satuan: parsedJson['satuankegiatan']),
-        statusKegiatan:
-            StatusKegiatan.fromJson(parsedJson['datastatuskegiatan']),
-        satuanDurasi: SatuanDurasi.fromJson(parsedJson['datasatuandurasi']),
+        statusKegiatan: parsedJson['datastatuskegiatan'] != null
+            ? StatusKegiatan.fromJson(parsedJson['datastatuskegiatan'])
+            : null,
+        satuanDurasi: parsedJson['datasatuandurasi'] != null
+            ? SatuanDurasi.fromJson(parsedJson['datasatuandurasi'])
+            : null,
         keterangan: parsedJson['keterangan'],
-        durasi: parsedJson['durasi'],
-        volume: parsedJson['volume'],
+        durasi: parsedJson['durasi'] != null
+            ? double.parse(parsedJson['durasi'].toString())
+            : null,
+        volume: parsedJson['volume'] != null
+            ? double.parse(parsedJson['volume'].toString())
+            : null,
         pemberiTugas: parsedJson['pemberitugas'],
         tanggal: DateTime.parse(parsedJson['tanggal']));
   }
@@ -111,14 +118,6 @@ class SatuanDurasi {
 
   SatuanDurasi({this.id, this.nama});
 
-  static List<SatuanDurasi> getExampleSatuanDurasi() {
-    List<SatuanDurasi> list = List();
-    list.add(SatuanDurasi(id: "1", nama: "Jam"));
-    list.add(SatuanDurasi(id: "2", nama: "Menit"));
-
-    return list;
-  }
-
   factory SatuanDurasi.fromJson(Map<String, dynamic> parsedJson) {
     return SatuanDurasi(
         id: parsedJson['id'].toString(), nama: parsedJson['satuan']);
@@ -128,11 +127,14 @@ class SatuanDurasi {
 class StatusKegiatan {
   final String id;
   final String status;
+  final String color;
 
-  StatusKegiatan({this.id, this.status});
+  StatusKegiatan({this.id, this.status, this.color});
 
   factory StatusKegiatan.fromJson(Map<String, dynamic> parsedJson) {
     return StatusKegiatan(
-        id: parsedJson['id'].toString(), status: parsedJson['statuskegiatan']);
+        id: parsedJson['id'].toString(),
+        status: parsedJson['statuskegiatan'],
+        color: parsedJson['warna']);
   }
 }

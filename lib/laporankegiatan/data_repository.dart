@@ -1,4 +1,3 @@
-import 'package:absensi_bps_2/classes/keterangan_absensi.dart';
 import 'package:absensi_bps_2/laporankegiatan/data_provider.dart';
 import 'package:absensi_bps_2/laporankegiatan/kegiatan_model.dart';
 import 'package:absensi_bps_2/laporankegiatan/post.dart';
@@ -37,6 +36,16 @@ class DataRepository {
     return response;
   }
 
+  Future<Post> updateKegiatan(String nip, Kegiatan kegiatan) async {
+    Post response = await provider.updateKegiatan(nip, kegiatan);
+    return response;
+  }
+
+  Future<Post> hapusKegiatan(String id) async {
+    Post response = await provider.hapusKegiatan(id);
+    return response;
+  }
+
   Future<dynamic> getSatuanDurasi() async {
     Post response = await provider.getSatuanDurasi();
     if (response.isSuccess) {
@@ -62,4 +71,5 @@ class DataRepository {
       return response.message;
     }
   }
+
 }

@@ -25,21 +25,41 @@ class TambahKegiatanHarian extends LaporanHarianEvent {
   List<Object> get props => [kegiatan];
 }
 
-class HapusKegiatanHarian extends LaporanHarianEvent {
-  final int index;
+class UpdateKegiatanHarian extends LaporanHarianEvent {
+  final Kegiatan kegiatan;
 
-  HapusKegiatanHarian(this.index);
+  UpdateKegiatanHarian(this.kegiatan);
 
   @override
-  List<Object> get props => [index];
+  List<Object> get props => [kegiatan];
 }
 
-class EditKeterangan extends LaporanHarianEvent {
+class StartHapusKegiatanHarian extends LaporanHarianEvent {
   final int index;
-  final String keterangan;
+  final String id;
 
-  EditKeterangan(this.index, this.keterangan);
+  StartHapusKegiatanHarian(this.index, this.id);
 
   @override
-  List<Object> get props => [index, keterangan];
+  List<Object> get props => [index, id];
+}
+
+class FinalHapusKegiatanHarian extends LaporanHarianEvent {
+  final int index;
+  final String id;
+
+  FinalHapusKegiatanHarian(this.index, this.id);
+
+  @override
+  List<Object> get props => [index, id];
+}
+
+class GetKegiatanList extends LaporanHarianEvent {
+  final String nip;
+  final String tanggal;
+
+  GetKegiatanList(this.nip, this.tanggal);
+
+  @override
+  List<Object> get props => [nip, tanggal];
 }

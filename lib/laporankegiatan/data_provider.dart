@@ -17,7 +17,7 @@ class DataProvider {
     Map<String, dynamic> formData = {
       //required
       "pegawai": nip,
-      "tanggal": DateFormat('yyyy-mm-dd').format(kegiatan.tanggal),
+      "tanggal": DateFormat('yyyy-MM-dd').format(kegiatan.tanggal),
       "namakegiatan": kegiatan.detailKegiatan.nama,
       "satuankegiatan": kegiatan.detailKegiatan.satuan,
       "volume": kegiatan.volume.toString(),
@@ -63,6 +63,52 @@ class DataProvider {
     return responseJson;
   }
 
+  Future<dynamic> updateKegiatan(String nip, Kegiatan kegiatan) async {
+    String url = "${developmentServerUrl}kegiatan/" + kegiatan.id;
+
+    Map<String, dynamic> formData = {
+      //required
+      "pegawai": nip,
+      "tanggal": DateFormat('yyyy-MM-dd').format(kegiatan.tanggal),
+      "namakegiatan": kegiatan.detailKegiatan.nama,
+      "satuankegiatan": kegiatan.detailKegiatan.satuan,
+      "volume": kegiatan.volume.toString(),
+    };
+    if (kegiatan.durasi != null) {
+      formData['durasi'] = kegiatan.durasi.toString();
+    }
+    if (kegiatan.satuanDurasi != null) {
+      formData['satuandurasi'] = kegiatan.satuanDurasi.id;
+    }
+    if (kegiatan.statusKegiatan != null) {
+      formData['statuskegiatan'] = kegiatan.statusKegiatan.id;
+    }
+    if (kegiatan.pemberiTugas != null) {
+      formData['pemberitugas'] = kegiatan.pemberiTugas;
+    }
+    if (kegiatan.keterangan != null) {
+      formData['keterangan'] = kegiatan.keterangan;
+    }
+
+    var responseJson;
+    try {
+      final response = await Dio().put(
+        url,
+        data: formData,
+        options: Options(
+          headers: {
+            Headers.contentTypeHeader: "application/json", // set content-length
+          },
+        ),
+      );
+      responseJson = _returnResponse(response);
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+
+    return responseJson;
+  }
+
   Future<dynamic> getKegiatan(String nip, String tanggal) async {
     String url =
         "${developmentServerUrl}kegiatan?tanggal=$tanggal&pegawai=$nip";
@@ -70,6 +116,22 @@ class DataProvider {
     var responseJson;
     try {
       final response = await Dio().get(
+        url,
+      );
+      responseJson = _returnResponse(response);
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+
+    return responseJson;
+  }
+
+  Future<dynamic> hapusKegiatan(String id) async {
+    String url = "${developmentServerUrl}kegiatan/$id";
+
+    var responseJson;
+    try {
+      final response = await Dio().delete(
         url,
       );
       responseJson = _returnResponse(response);

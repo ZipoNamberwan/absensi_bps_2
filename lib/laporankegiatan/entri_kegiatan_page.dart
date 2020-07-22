@@ -11,6 +11,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 class TambahKegiatanPage extends StatefulWidget {
+  final Kegiatan kegiatan;
+
+  const TambahKegiatanPage({Key key, this.kegiatan}) : super(key: key);
+
   @override
   _TambahKegiatanPageState createState() => _TambahKegiatanPageState();
 }
@@ -20,12 +24,15 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
   TextEditingController _volumeContorller;
   TextEditingController _durasiController;
   TextEditingController _pemberiTugasController;
+  TextEditingController _keteranganController;
 
   @override
   void initState() {
     super.initState();
     _bloc = EntriKegiatanBloc();
-    _volumeContorller = TextEditingController();
+    _volumeContorller = TextEditingController(
+        text:
+            widget.kegiatan != null ? widget.kegiatan.volume.toString() : null);
     _volumeContorller.addListener(() {
       double volume = 0;
       try {
@@ -33,7 +40,12 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
       } catch (e) {}
       _bloc.add(UpdateVolumeKegiatan(volume));
     });
-    _durasiController = TextEditingController();
+    _durasiController = TextEditingController(
+        text: widget.kegiatan != null
+            ? widget.kegiatan.durasi != null
+                ? widget.kegiatan.durasi.toString()
+                : null
+            : null);
     _durasiController.addListener(() {
       double durasi = 0;
       try {
@@ -41,9 +53,24 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
       } catch (e) {}
       _bloc.add(UpdateDurasiKegiatan(durasi));
     });
-    _pemberiTugasController = TextEditingController();
+    _pemberiTugasController = TextEditingController(
+        text: widget.kegiatan != null
+            ? widget.kegiatan.pemberiTugas != null
+                ? widget.kegiatan.pemberiTugas
+                : null
+            : null);
     _pemberiTugasController.addListener(() {
       _bloc.add(UpdatePemberiTugasKegiatan(_pemberiTugasController.text));
+    });
+
+    _keteranganController = TextEditingController(
+        text: widget.kegiatan != null
+            ? widget.kegiatan.keterangan != null
+                ? widget.kegiatan.keterangan
+                : null
+            : null);
+    _keteranganController.addListener(() {
+      _bloc.add(UpdateKeterangan(_keteranganController.text));
     });
   }
 
@@ -57,7 +84,7 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
   Widget build(BuildContext context) {
     return BlocProvider<EntriKegiatanBloc>(
       create: (context) {
-        return _bloc..add(InitPage());
+        return _bloc..add(InitPage(widget.kegiatan));
       },
       child: BlocConsumer<EntriKegiatanBloc, EntriKegiatanState>(
         listener: (context, state) {
@@ -79,8 +106,8 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                     actions: <Widget>[
                       FlatButton(
                           onPressed: () {
-                            Navigator.pop(context);
-                            Navigator.pop(context);
+                            Navigator.pop(context, state.kegiatan);
+                            Navigator.pop(context, state.kegiatan);
                           },
                           child: Text("OK")),
                     ],
@@ -389,6 +416,7 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                           child: Center(
                             child: TextField(
                               controller: _pemberiTugasController,
+                              textCapitalization: TextCapitalization.sentences,
                               decoration: InputDecoration(
                                 border: InputBorder.none,
                                 hintText: "Tulis nama pemberi tugas di sini",
@@ -407,7 +435,7 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                           ),
                         ),
                         Container(
-                          width: 150,
+                          width: MediaQuery.of(context).size.width * 2 / 3,
                           margin: EdgeInsets.only(bottom: 25),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
@@ -445,10 +473,41 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                             ),
                           ),
                         ),
+                        Container(
+                          margin: EdgeInsets.only(bottom: 15),
+                          child: Text(
+                            "Keterangan",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: Colors.black38, width: 0.5)),
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          margin: EdgeInsets.only(bottom: 15),
+                          child: Center(
+                            child: TextField(
+                              maxLines: 4,
+                              controller: _keteranganController,
+                              textCapitalization: TextCapitalization.sentences,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "Tulis keterangan jika ada",
+                                hintStyle: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ),
                         GestureDetector(
                             onTap: state.kegiatan.isValid()
                                 ? () {
-                                    _bloc.add(PostKegiatan("57639"));
+                                    widget.kegiatan == null
+                                        ? _bloc.add(PostKegiatan("57639"))
+                                        : _bloc.add(PostEditKegiatan("57639"));
                                   }
                                 : () {},
                             child: Stack(
@@ -461,7 +520,9 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                                       borderRadius: BorderRadius.circular(10)),
                                   child: Center(
                                     child: Text(
-                                      "TAMBAH",
+                                      widget.kegiatan == null
+                                          ? "TAMBAH"
+                                          : "SIMPAN",
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold),

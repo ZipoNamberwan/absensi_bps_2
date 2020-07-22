@@ -1,6 +1,6 @@
 library flutter_calendar_dooboo;
 
-import 'package:absensi_bps_2/laporankegiatan/entri_laporan_harian.dart';
+import 'package:absensi_bps_2/laporankegiatan/view_laporan_harian.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:flutter/material.dart';
 

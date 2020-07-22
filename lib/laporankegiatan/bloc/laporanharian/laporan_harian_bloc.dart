@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'package:absensi_bps_2/laporankegiatan/data_repository.dart';
 import 'package:absensi_bps_2/laporankegiatan/kegiatan_model.dart';
+import 'package:absensi_bps_2/laporankegiatan/post.dart';
 import 'package:bloc/bloc.dart';
 import './bloc.dart';
 
 class LaporanHarianBloc extends Bloc<LaporanHarianEvent, LaporanHarianState> {
+  DataRepository repository = DataRepository();
+
   @override
   LaporanHarianState get initialState => InitialLaporanHarianState();
 
@@ -11,46 +15,72 @@ class LaporanHarianBloc extends Bloc<LaporanHarianEvent, LaporanHarianState> {
   Stream<LaporanHarianState> mapEventToState(
     LaporanHarianEvent event,
   ) async* {
-    if (event is UpdateTanggalLaporanHarian) {
-      yield* mapUpdateTanggalLaporanHarianToState(event.tanggal);
-    } else if (event is TambahKegiatanHarian) {
+    if (event is TambahKegiatanHarian) {
       yield* mapTambahKegiatanHarianToState(event.kegiatan);
-    } else if (event is HapusKegiatanHarian) {
-      yield* mapHapusKegiatanHarianToState(event.index);
-    } else if (event is EditKeterangan) {
-      yield* mapEditKeteranganToState(event.index, event.keterangan);
+    } else if (event is StartHapusKegiatanHarian) {
+      yield* mapHapusKegiatanHarianToState(event.index, event.id);
+    } else if (event is FinalHapusKegiatanHarian) {
+      yield* mapFinalHapusKegiatanHarianToState(event.index, event.id);
+    } else if (event is GetKegiatanList) {
+      yield* mapGetKegiatanListToState(event.nip, event.tanggal);
+    } else if (event is UpdateKegiatanHarian) {
+      yield* mapUpdateKegiatanHarianToState(event.kegiatan);
     }
-  }
-
-  Stream<LaporanHarianState> mapUpdateTanggalLaporanHarianToState(
-      DateTime tanggal) async* {
-    yield LaporanHarianState(
-        laporanHarian: state.laporanHarian.copyWith(tanggal: tanggal));
   }
 
   Stream<LaporanHarianState> mapTambahKegiatanHarianToState(
       Kegiatan kegiatan) async* {
-    List<Kegiatan> list = state.laporanHarian.listKegiatan;
-    list.insert(0, kegiatan);
-    yield LaporanHarianState(
-        laporanHarian: state.laporanHarian.copyWith(listKegiatan: list));
+    List<Kegiatan> list = state.listKegiatan;
+    list.add(kegiatan);
+    yield LaporanHarianState(listKegiatan: list);
   }
 
-  Stream<LaporanHarianState> mapHapusKegiatanHarianToState(int index) async* {
-    List<Kegiatan> list = state.laporanHarian.listKegiatan;
+  Stream<LaporanHarianState> mapHapusKegiatanHarianToState(
+      int index, String id) async* {
+    yield LoadingHapusKegiatan(index, listKegiatan: state.listKegiatan);
+    try {
+      Post result = await repository.hapusKegiatan(id);
+      if (result.isSuccess) {
+        yield SuccessHapusKegiatan(index, listKegiatan: state.listKegiatan);
+      } else {
+        yield ErrorHapusKegiatan(result.message, index,
+            listKegiatan: state.listKegiatan);
+      }
+    } catch (e) {
+      yield ErrorHapusKegiatan(e.toString(), index,
+          listKegiatan: state.listKegiatan);
+    }
+  }
+
+  Stream<LaporanHarianState> mapGetKegiatanListToState(
+      String nip, String tanggal) async* {
+    yield LoadingListKegiatan(listKegiatan: state.listKegiatan);
+    try {
+      var result = await repository.getKegiatan(nip, tanggal);
+      if (result is List) {
+        yield LaporanHarianState(listKegiatan: result);
+      } else {
+        yield ErrorListKegiatan(result as String,
+            listKegiatan: state.listKegiatan);
+      }
+    } catch (e) {
+      yield ErrorListKegiatan(e.toString(), listKegiatan: state.listKegiatan);
+    }
+  }
+
+  Stream<LaporanHarianState> mapFinalHapusKegiatanHarianToState(
+      int index, String id) async* {
+    List<Kegiatan> list = state.listKegiatan;
     list.removeAt(index);
-    yield LaporanHarianState(
-        laporanHarian: state.laporanHarian.copyWith(listKegiatan: list));
+    yield LaporanHarianState(listKegiatan: list);
   }
 
-  Stream<LaporanHarianState> mapEditKeteranganToState(
-      int index, String keterangan) async* {
-    Kegiatan kegiatan = state.laporanHarian.listKegiatan[index]
-        .copyWith(keterangan: keterangan);
-    List<Kegiatan> list = state.laporanHarian.listKegiatan;
+  Stream<LaporanHarianState> mapUpdateKegiatanHarianToState(
+      Kegiatan kegiatan) async* {
+    List<Kegiatan> list = state.listKegiatan;
+    int index = list.indexWhere((element) => kegiatan.id == element.id);
     list[index] = kegiatan;
 
-    yield LaporanHarianState(
-        laporanHarian: state.laporanHarian.copyWith(listKegiatan: list));
+    yield LaporanHarianState(listKegiatan: list);
   }
 }

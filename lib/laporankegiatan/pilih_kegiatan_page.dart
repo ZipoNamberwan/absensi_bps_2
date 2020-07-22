@@ -72,6 +72,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                                 onChanged: (value) {
                                   _bloc.add(UpdateNamaKegiatan("57639", value));
                                 },
+                                textCapitalization: TextCapitalization.sentences,
                                 controller: _namaController,
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
@@ -110,6 +111,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                                           _bloc
                                               .add(UpdateSatuanKegiatan(value));
                                         },
+                                        textCapitalization: TextCapitalization.sentences,
                                         controller: _satuanController,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,

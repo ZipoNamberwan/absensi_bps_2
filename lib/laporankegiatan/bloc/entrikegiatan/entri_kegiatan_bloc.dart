@@ -27,12 +27,16 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
       yield* mapUpdatePemberiTugasKegiatanToState(event.pemberiTugas);
     } else if (event is UpdateStatusKegiatan) {
       yield* mapUpdateStatusKegiatanToState(event.statusKegiatan);
+    } else if (event is UpdateKeterangan) {
+      yield* mapUpdateKeteranganToState(event.keterangan);
     } else if (event is UpdateTanggal) {
       yield* mapUpdateTanggalToState(event.tanggal);
     } else if (event is PostKegiatan) {
       yield* mapPostKegiatanToState(event.nip);
     } else if (event is InitPage) {
-      yield* mapInitPageToState();
+      yield* mapInitPageToState(event.kegiatan);
+    } else if (event is PostEditKegiatan) {
+      yield* mapPostEditKegiatanToState(event.nip);
     }
   }
 
@@ -91,6 +95,14 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
         listStatusKegiatan: state.listStatusKegiatan);
   }
 
+  Stream<EntriKegiatanState> mapUpdateKeteranganToState(
+      String keterangan) async* {
+    yield EntriKegiatanState(
+        kegiatan: state.kegiatan.copyWith(keterangan: keterangan),
+        listSatuanDurasi: state.listSatuanDurasi,
+        listStatusKegiatan: state.listStatusKegiatan);
+  }
+
   Stream<EntriKegiatanState> mapPostKegiatanToState(String nip) async* {
     yield LoadingPost(
         kegiatan: state.kegiatan,
@@ -99,6 +111,33 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
 
     try {
       Post result = await repository.tambahKegiatan(nip, state.kegiatan);
+      if (result.isSuccess) {
+        yield SuccessPost(
+            kegiatan: state.kegiatan.copyWith(id: result.data['id'].toString()),
+            listSatuanDurasi: state.listSatuanDurasi,
+            listStatusKegiatan: state.listStatusKegiatan);
+      } else {
+        yield ErrorPost(result.message,
+            kegiatan: state.kegiatan,
+            listSatuanDurasi: state.listSatuanDurasi,
+            listStatusKegiatan: state.listStatusKegiatan);
+      }
+    } catch (e) {
+      yield ErrorPost(e.toString(),
+          kegiatan: state.kegiatan,
+          listSatuanDurasi: state.listSatuanDurasi,
+          listStatusKegiatan: state.listStatusKegiatan);
+    }
+  }
+
+  Stream<EntriKegiatanState> mapPostEditKegiatanToState(String nip) async* {
+    yield LoadingPost(
+        kegiatan: state.kegiatan,
+        listSatuanDurasi: state.listSatuanDurasi,
+        listStatusKegiatan: state.listStatusKegiatan);
+
+    try {
+      Post result = await repository.updateKegiatan(nip, state.kegiatan);
       if (result.isSuccess) {
         yield SuccessPost(
             kegiatan: state.kegiatan,
@@ -118,7 +157,7 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
     }
   }
 
-  Stream<EntriKegiatanState> mapInitPageToState() async* {
+  Stream<EntriKegiatanState> mapInitPageToState(Kegiatan kegiatan) async* {
     yield InitialEntriKegiatanState();
 
     try {
@@ -129,7 +168,13 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
         yield EntriKegiatanState(
             listStatusKegiatan: status,
             listSatuanDurasi: satuan,
-            kegiatan: state.kegiatan);
+            kegiatan: kegiatan == null
+                ? state.kegiatan
+                : kegiatan.copyWith(
+                    statusKegiatan: _getSelectedStatusKegiatan(
+                        status, kegiatan.statusKegiatan),
+                    satuanDurasi: _getSelectedSatuanDurasi(
+                        satuan, kegiatan.satuanDurasi)));
       } else {
         yield ErrorInitEntriKegiatanState(
             (status as String) + (satuan as String),
@@ -143,5 +188,29 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
           listSatuanDurasi: state.listSatuanDurasi,
           listStatusKegiatan: state.listStatusKegiatan);
     }
+  }
+
+  SatuanDurasi _getSelectedSatuanDurasi(
+      List<SatuanDurasi> list, SatuanDurasi satuanDurasi) {
+    if (satuanDurasi != null) {
+      for (int i = 0; i < list.length; i++) {
+        if (list[i].id == satuanDurasi.id) {
+          return list[i];
+        }
+      }
+    }
+    return null;
+  }
+
+  StatusKegiatan _getSelectedStatusKegiatan(
+      List<StatusKegiatan> list, StatusKegiatan statusKegiatan) {
+    if (statusKegiatan != null) {
+      for (int i = 0; i < list.length; i++) {
+        if (list[i].id == statusKegiatan.id) {
+          return list[i];
+        }
+      }
+    }
+    return null;
   }
 }
