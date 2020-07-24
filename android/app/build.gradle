@@ -45,6 +45,9 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = [
+                'appAuthRedirectScheme': 'absensi.ntt.bps.absensi_bps_2'
+        ]
     }
 
     signingConfigs {

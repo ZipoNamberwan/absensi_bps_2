@@ -1,6 +1,7 @@
 library flutter_calendar_dooboo;
 
 import 'package:absensi_bps_2/laporankegiatan/view_laporan_harian.dart';
+import 'package:absensi_bps_2/login/login_sso.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:flutter/material.dart';
 
@@ -36,7 +37,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       /*home: LoginPage(),*/
-      home: EntriLaporanHarianPage(),
+      /*home: EntriLaporanHarianPage(),*/
+      home: LoginSSO(),
     );
   }
 }

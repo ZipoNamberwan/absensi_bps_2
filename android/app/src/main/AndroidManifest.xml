@@ -28,6 +28,17 @@
                 android:value="true" />
         </activity>
 
+        <activity android:name="clancey.simpleauth.simpleauthflutter.SimpleAuthCallbackActivity">
+            <intent-filter android:label="simple_auth">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="absensi.ntt.bps.absensi_bps_2" />
+            </intent-filter>
+        </activity>
+
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>
@@ -35,6 +46,7 @@
             </intent-filter>
         </receiver>
     </application>
+
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
