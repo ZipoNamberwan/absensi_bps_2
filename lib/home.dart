@@ -1,6 +1,7 @@
 import 'package:absensi_bps_2/classes/statistik.dart';
 import 'package:absensi_bps_2/classes/statistik_tile_widget.dart';
 import 'package:absensi_bps_2/classes/statistik_tile_widget_empty.dart';
+import 'package:absensi_bps_2/login/logout_sso.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,8 +11,6 @@ import 'package:intl/intl.dart';
 import 'classes/detail_absensi.dart';
 import 'classes/keterangan_absensi.dart';
 import 'classes/rounded_image_widget.dart';
-import 'classes/shared_preference.dart';
-import 'login/login.dart';
 
 class HomePage extends StatefulWidget {
   final Pegawai pegawai;
@@ -318,12 +317,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _logout() {
-    SavedPreference.removeAll();
-    Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-        (Route<dynamic> route) => false);
+  Future<void> _logout() async {
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+      return LogOutSSO();
+    }));
   }
 
   void _showLogoutDialog() {

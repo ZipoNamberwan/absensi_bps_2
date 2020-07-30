@@ -1,20 +1,3 @@
-class LaporanHarian {
-  final DateTime tanggal;
-  final List<Kegiatan> listKegiatan;
-
-  LaporanHarian({this.tanggal, this.listKegiatan});
-
-  bool isValid() {
-    return tanggal != null && tanggal != "" && listKegiatan.isNotEmpty;
-  }
-
-  LaporanHarian copyWith({DateTime tanggal, List<Kegiatan> listKegiatan}) {
-    return LaporanHarian(
-        tanggal: tanggal ?? this.tanggal,
-        listKegiatan: listKegiatan ?? this.listKegiatan);
-  }
-}
-
 class Kegiatan {
   final String id;
   final DateTime tanggal;

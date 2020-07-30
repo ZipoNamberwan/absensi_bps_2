@@ -1,3 +1,4 @@
+import 'package:absensi_bps_2/classes/keterangan_absensi.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/pilihkegiatan/bloc.dart';
 import 'package:absensi_bps_2/laporankegiatan/kegiatan_model.dart';
 import 'package:absensi_bps_2/src/color.dart';
@@ -8,6 +9,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'bloc/pilihkegiatan/pilih_kegiatan_bloc.dart';
 
 class PlihKegiatanPage extends StatefulWidget {
+  final Pegawai pegawai;
+
+  const PlihKegiatanPage({Key key, this.pegawai}) : super(key: key);
+
   @override
   _PlihKegiatanPageState createState() => _PlihKegiatanPageState();
 }
@@ -36,7 +41,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
   Widget build(BuildContext context) {
     return BlocProvider<PilihKegiatanBloc>(
       create: (context) {
-        return _bloc..add(GetHistoryKegiatan("57639", ""));
+        return _bloc..add(GetHistoryKegiatan(widget.pegawai.nip, ""));
       },
       child: BlocBuilder<PilihKegiatanBloc, PilihKegiatanState>(
         builder: (context, state) {
@@ -70,9 +75,11 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                             child: Center(
                               child: TextField(
                                 onChanged: (value) {
-                                  _bloc.add(UpdateNamaKegiatan("57639", value));
+                                  _bloc.add(UpdateNamaKegiatan(
+                                      widget.pegawai.nip, value));
                                 },
-                                textCapitalization: TextCapitalization.sentences,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
                                 controller: _namaController,
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
@@ -111,7 +118,8 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                                           _bloc
                                               .add(UpdateSatuanKegiatan(value));
                                         },
-                                        textCapitalization: TextCapitalization.sentences,
+                                        textCapitalization:
+                                            TextCapitalization.sentences,
                                         controller: _satuanController,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
@@ -208,8 +216,8 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                                   ),
                                   InkWell(
                                     onTap: () {
-                                      _bloc
-                                          .add(GetHistoryKegiatan("57639", ""));
+                                      _bloc.add(GetHistoryKegiatan(
+                                          widget.pegawai.nip, ""));
                                     },
                                     child: Container(
                                       padding: EdgeInsets.all(10),
@@ -239,7 +247,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                                   state.listHistoryKegiatan[i].satuan;
 
                               _bloc.add(UpdateNamaKegiatan(
-                                  "57639", _namaController.text));
+                                  widget.pegawai.nip, _namaController.text));
                               _bloc.add(
                                   UpdateSatuanKegiatan(_satuanController.text));
                             },

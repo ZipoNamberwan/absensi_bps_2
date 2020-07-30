@@ -61,7 +61,26 @@ class Pegawai {
         namaBidang: parsedJson['namabidang'],
         foto: parsedJson['foto'],
         email: parsedJson['email'],
-        nipBaru: parsedJson['nipbaru']) ;
+        nipBaru: parsedJson['nipbaru']);
+  }
+
+  factory Pegawai.fromHtml(String html) {
+    return Pegawai(
+      nama: _getField("nama", html),
+      email: _getField("username", html),
+      nip: _getField("nip", html).substring(4),
+      foto: _getField("foto", html)
+    );
+  }
+
+  static String _getField(String data, String html) {
+    String start = data + "-";
+    String end = "-" + data;
+
+    final startIndex = html.indexOf(start);
+    final endIndex = html.indexOf(end, startIndex + start.length);
+
+    return html.substring(startIndex + start.length, endIndex);
   }
 }
 

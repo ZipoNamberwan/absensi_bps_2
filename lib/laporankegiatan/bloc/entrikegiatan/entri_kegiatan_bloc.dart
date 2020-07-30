@@ -34,7 +34,7 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
     } else if (event is PostKegiatan) {
       yield* mapPostKegiatanToState(event.nip);
     } else if (event is InitPage) {
-      yield* mapInitPageToState(event.kegiatan);
+      yield* mapInitPageToState(event.kegiatan, event.selectedDateTime);
     } else if (event is PostEditKegiatan) {
       yield* mapPostEditKegiatanToState(event.nip);
     }
@@ -157,7 +157,8 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
     }
   }
 
-  Stream<EntriKegiatanState> mapInitPageToState(Kegiatan kegiatan) async* {
+  Stream<EntriKegiatanState> mapInitPageToState(
+      Kegiatan kegiatan, DateTime selectedDateTime) async* {
     yield InitialEntriKegiatanState();
 
     try {
@@ -169,8 +170,9 @@ class EntriKegiatanBloc extends Bloc<EntriKegiatanEvent, EntriKegiatanState> {
             listStatusKegiatan: status,
             listSatuanDurasi: satuan,
             kegiatan: kegiatan == null
-                ? state.kegiatan
+                ? state.kegiatan.copyWith(tanggal: selectedDateTime)
                 : kegiatan.copyWith(
+                    tanggal: selectedDateTime,
                     statusKegiatan: _getSelectedStatusKegiatan(
                         status, kegiatan.statusKegiatan),
                     satuanDurasi: _getSelectedSatuanDurasi(

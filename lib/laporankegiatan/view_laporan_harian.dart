@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class EntriLaporanHarianPage extends StatefulWidget {
+
   @override
   _EntriLaporanHarianPageState createState() => _EntriLaporanHarianPageState();
 }

@@ -1,6 +1,5 @@
 library flutter_calendar_dooboo;
 
-import 'package:absensi_bps_2/laporankegiatan/view_laporan_harian.dart';
 import 'package:absensi_bps_2/login/login_sso.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +10,11 @@ import 'package:absensi_bps_2/classes/event_list.dart';
 import 'package:absensi_bps_2/classes/detail_absensi.dart';
 import 'classes/bidang.dart';
 import 'classes/keterangan_absensi.dart';
-import 'login/login.dart';
 
-void main() => runApp(new MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(new MyApp());
+  }
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -88,13 +89,31 @@ class _AbsensiPageState extends State<AbsensiPage>
     double height;
 
     if (widget.bidang != null) {
-      height = MediaQuery.of(context).size.height -
-          MediaQuery.of(context).padding.bottom -
-          MediaQuery.of(context).padding.top;
+      height = MediaQuery
+          .of(context)
+          .size
+          .height -
+          MediaQuery
+              .of(context)
+              .padding
+              .bottom -
+          MediaQuery
+              .of(context)
+              .padding
+              .top;
     } else {
-      height = MediaQuery.of(context).size.height -
-          MediaQuery.of(context).padding.bottom -
-          MediaQuery.of(context).padding.top -
+      height = MediaQuery
+          .of(context)
+          .size
+          .height -
+          MediaQuery
+              .of(context)
+              .padding
+              .bottom -
+          MediaQuery
+              .of(context)
+              .padding
+              .top -
           kBottomNavigationBarHeight;
     }
 
@@ -117,7 +136,10 @@ class _AbsensiPageState extends State<AbsensiPage>
       iconColor: Colors.black,
       weekFormat: false,
       height: height,
-      width: MediaQuery.of(context).size.width,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width,
       customGridViewPhysics: NeverScrollableScrollPhysics(),
       weekdayRowHeight: 40,
       markedDateShowIcon: true,

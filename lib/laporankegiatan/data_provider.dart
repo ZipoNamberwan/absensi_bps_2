@@ -199,7 +199,7 @@ class DataProvider {
   dynamic _returnResponse(var response) {
     switch (response.statusCode) {
       case 200:
-        var responseJson;
+        //var responseJson;
         //responseJson = json.decode(response.data);
         return Post(
             isSuccess: response.data['success'],

@@ -9,8 +9,9 @@ abstract class EntriKegiatanEvent extends Equatable {
 
 class InitPage extends EntriKegiatanEvent {
   final Kegiatan kegiatan;
+  final DateTime selectedDateTime;
 
-  InitPage(this.kegiatan);
+  InitPage(this.kegiatan, this.selectedDateTime);
 
   @override
   List<Object> get props => [kegiatan];

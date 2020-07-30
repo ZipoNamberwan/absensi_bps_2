@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:absensi_bps_2/classes/bidang.dart';
 import 'package:absensi_bps_2/classes/custom_bottom_nav_bar.dart';
+import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/bloc.dart';
+import 'package:absensi_bps_2/laporankegiatan/entri_kegiatan_page.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:date_utils/date_utils.dart';
 import 'package:flutter/gestures.dart';
@@ -11,6 +13,8 @@ import 'package:absensi_bps_2/classes/event_list.dart';
 import 'package:absensi_bps_2/src/default_styles.dart';
 import 'package:absensi_bps_2/src/calendar_header.dart';
 import 'package:absensi_bps_2/src/weekday_row.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 export 'package:absensi_bps_2/classes/event_list.dart';
@@ -187,7 +191,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     with TickerProviderStateMixin {
   static final int homePageIndex = 0;
   static final int calendarPageIndex = 1;
-  static final int ckpPageIndex = 3;
+  static final int unduhPageIndex = 2;
   static final int fab1Clicked = 1;
   static final int fab2Clicked = 2;
 
@@ -228,6 +232,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   Animation<double> _fadePageAnimation;
   bool _fabOptionIsOpen = false;
   int _fabClicked = -1;
+
+  UnduhBloc _unduhBloc = UnduhBloc();
 
   /// When FIRSTDAYOFWEEK is 0 in dart-intl, it represents Monday. However it is the second day in the arrays of Weekdays.
   /// Therefore we need to add 1 modulo 7 to pick the right weekday from intl. (cf. [GlobalMaterialLocalizations])
@@ -348,6 +354,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     _fadePageAnimationController.dispose();
     _fabAnimationController.dispose();
     _fabClickedAnimationController.dispose();
+    _unduhBloc.close();
     super.dispose();
   }
 
@@ -475,7 +482,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
     Widget homePage;
 
-    Widget ckpPage;
+    Widget ckpPage = Container();
 
     if (widget.bidang == null) {
       homePage = HomePage(
@@ -487,12 +494,178 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         onPressedDrawer: widget.onPressedDrawer,
       );
 
-      ckpPage = Container();
+      Widget unduhPage = BlocBuilder<UnduhBloc, UnduhState>(
+        builder: (context, state) {
+          return Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height -
+                kBottomNavigationBarHeight -
+                MediaQuery.of(context).padding.top,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: kBottomNavigationBarHeight,
+                  margin: EdgeInsets.only(left: 20),
+                  child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Unduh Laporan Harian",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18),
+                      )),
+                ),
+                Padding(
+                  padding:
+                      EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(flex: 2, child: Text("Dari: ")),
+                          Expanded(
+                            flex: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                DatePicker.showDatePicker(context,
+                                    showTitleActions: true,
+                                    minTime: DateTime(2019, 1, 1),
+                                    currentTime: state.from, onConfirm: (date) {
+                                  _unduhBloc.add(ChangeFromDate(date));
+                                }, locale: LocaleType.id);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                        color: Colors.black12, width: 0.5)),
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: TextField(
+                                  controller: TextEditingController(
+                                      text: state.from != null
+                                          ? DateFormat("yyyy-MM-dd")
+                                              .format(state.from)
+                                          : ""),
+                                  decoration: InputDecoration(
+                                      enabled: false,
+                                      border: InputBorder.none,
+                                      hintText: "dd/mm/yyyy",
+                                      hintStyle: TextStyle(fontSize: 12),
+                                      suffixIcon: Icon(
+                                        Icons.calendar_today,
+                                        color: Colors.black54,
+                                        size: 23,
+                                      )),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(flex: 2, child: Text("Sampai: ")),
+                          Expanded(
+                            flex: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                DatePicker.showDatePicker(context,
+                                    showTitleActions: true,
+                                    minTime: DateTime(2019, 1, 1),
+                                    onConfirm: (date) {
+                                  _unduhBloc.add(ChangeToDate(date));
+                                },
+                                    currentTime: state.to,
+                                    locale: LocaleType.id);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                        color: Colors.black12, width: 0.5)),
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: TextField(
+                                  controller: TextEditingController(
+                                      text: state.to != null
+                                          ? DateFormat("yyyy-MM-dd")
+                                              .format(state.to)
+                                          : ""),
+                                  decoration: InputDecoration(
+                                      enabled: false,
+                                      border: InputBorder.none,
+                                      hintText: "dd/mm/yyyy",
+                                      hintStyle: TextStyle(fontSize: 12),
+                                      suffixIcon: Icon(
+                                        Icons.calendar_today,
+                                        color: Colors.black54,
+                                        size: 23,
+                                      )),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                InkWell(
+                  onTap: state.isValid()
+                      ? () {
+                          //download here
+                          _unduhBloc.add(StartDownload());
+                        }
+                      : () {},
+                  child: Stack(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        margin: EdgeInsets.symmetric(horizontal: 20),
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                            color: mainColor,
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Center(
+                          child: Text(
+                            "UNDUH",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      AnimatedOpacity(
+                        opacity: state.isValid() ? 0.0 : 0.5,
+                        child: Container(
+                          height: 50,
+                          margin: EdgeInsets.symmetric(horizontal: 20),
+                          color: Colors.white,
+                        ),
+                        duration: Duration(milliseconds: 300),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          );
+        },
+      );
 
       if (_currentIndex == homePageIndex) {
         _currentPage = homePage;
       } else if (_currentIndex == calendarPageIndex) {
         _currentPage = calendarPage;
+      } else if (_currentIndex == unduhPageIndex) {
+        _currentPage = unduhPage;
       } else {
         _currentPage = ckpPage;
       }
@@ -531,225 +704,240 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
             ),
             key: widget.scaffoldKey,
           )
-        : Scaffold(
-            drawer: Drawer(
-              child: _createDrawer(),
-            ),
-            key: widget.scaffoldKey,
-            body: SingleChildScrollView(
-              child: Container(
-                margin:
-                    EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                child: CustomFadeAnimationWidget(
-                    animation: _fadePageAnimation,
-                    child: Stack(
-                      children: <Widget>[
-                        Column(
-                          children: <Widget>[
-                            SizedBox(
-                              height: widget.headerHeight,
+        : BlocProvider<UnduhBloc>(
+            create: (context) {
+              return _unduhBloc;
+            },
+            child: Scaffold(
+              drawer: Drawer(
+                child: _createDrawer(),
+              ),
+              key: widget.scaffoldKey,
+              body: SingleChildScrollView(
+                child: Container(
+                  margin:
+                      EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                  child: CustomFadeAnimationWidget(
+                      animation: _fadePageAnimation,
+                      child: Stack(
+                        children: <Widget>[
+                          Column(
+                            children: <Widget>[
+                              SizedBox(
+                                height: widget.headerHeight,
+                                child: Container(),
+                              ),
+                              (_isDetailLoading |
+                                      _isListPegawaiLoading |
+                                      _isKeteranganLoading)
+                                  ? Align(
+                                      child: LinearProgressIndicator(),
+                                      alignment: Alignment.bottomCenter,
+                                    )
+                                  : Container(),
+                            ],
+                          ),
+                          CustomFadeAnimationWidget(
+                            child: _currentPage,
+                            animation: _fadeEverythingWhenFab1Clicked,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            child: AnimatedBuilder(
+                              animation: _fabBackgroundAnimation,
+                              builder: (context, child) {
+                                return Opacity(
+                                  opacity: 0.8,
+                                  child: Material(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (_fabOptionIsOpen) {
+                                          _fabAnimationController.reverse();
+                                          _fabOptionIsOpen = false;
+                                        }
+                                      },
+                                      child: Container(
+                                        height: _fabBackgroundAnimation.value,
+                                        width: widget.width,
+                                        decoration: BoxDecoration(
+                                            shape: BoxShape.rectangle,
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.only(
+                                                topLeft: Radius.circular(50),
+                                                topRight: Radius.circular(50))),
+                                      ),
+                                    ),
+                                    elevation: 6,
+                                  ),
+                                );
+                              },
                               child: Container(),
                             ),
-                            (_isDetailLoading |
-                                    _isListPegawaiLoading |
-                                    _isKeteranganLoading)
-                                ? Align(
-                                    child: LinearProgressIndicator(),
-                                    alignment: Alignment.bottomCenter,
-                                  )
-                                : Container(),
-                          ],
-                        ),
-                        CustomFadeAnimationWidget(
-                          child: _currentPage,
-                          animation: _fadeEverythingWhenFab1Clicked,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          child: AnimatedBuilder(
-                            animation: _fabBackgroundAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: 0.8,
-                                child: Material(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (_fabOptionIsOpen) {
-                                        _fabAnimationController.reverse();
-                                        _fabOptionIsOpen = false;
-                                      }
-                                    },
-                                    child: Container(
-                                      height: _fabBackgroundAnimation.value,
-                                      width: widget.width,
-                                      decoration: BoxDecoration(
-                                          shape: BoxShape.rectangle,
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.only(
-                                              topLeft: Radius.circular(50),
-                                              topRight: Radius.circular(50))),
-                                    ),
-                                  ),
-                                  elevation: 6,
-                                ),
-                              );
-                            },
-                            child: Container(),
                           ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          child: Container(
-                            width: widget.width,
-                            child: CustomTranslateAnimationWidget(
-                              animation: _translateFabAnimation1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                                  CustomFadeAnimationWidget(
-                                    animation: _fadeEverythingWhenFab1Clicked,
-                                    child: Container(
+                          Positioned(
+                            bottom: 0,
+                            child: Container(
+                              width: widget.width,
+                              child: CustomTranslateAnimationWidget(
+                                animation: _translateFabAnimation1,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: <Widget>[
+                                    CustomFadeAnimationWidget(
+                                      animation: _fadeEverythingWhenFab1Clicked,
+                                      child: Container(
+                                        margin: EdgeInsets.only(bottom: 8),
+                                        child: CustomFadeAnimationWidget(
+                                          animation: _fadeFabTextAnimation,
+                                          child: _createTextFab(
+                                              "Keterangan", "Absensi"),
+                                        ),
+                                      ),
+                                    ),
+                                    CustomFadeAnimationWidget(
+                                      animation: _fadeFabAnimation,
+                                      child:
+                                          CustomScaleContainerAnimationWidget(
+                                        animation: _scaleFabAnimation,
+                                        child: (_fabClicked == fab2Clicked)
+                                            ? CustomFadeAnimationWidget(
+                                                animation:
+                                                    _fadeEverythingWhenFab1Clicked,
+                                                child: _createFloatingButton(
+                                                    Icon(Icons.add_circle),
+                                                    "Add Absensi",
+                                                    fab1Clicked))
+                                            : _createFloatingButton(
+                                                Icon(Icons.add_circle),
+                                                "Add Absensi",
+                                                fab1Clicked),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            child: Container(
+                              width: widget.width,
+                              child: CustomTranslateAnimationWidget(
+                                animation: _translateFabAnimation2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: <Widget>[
+                                    Container(
                                       margin: EdgeInsets.only(bottom: 8),
                                       child: CustomFadeAnimationWidget(
                                         animation: _fadeFabTextAnimation,
-                                        child: _createTextFab(
-                                            "Keterangan", "Absensi"),
+                                        child: CustomFadeAnimationWidget(
+                                          animation:
+                                              _fadeEverythingWhenFab1Clicked,
+                                          child:
+                                              _createTextFab("CKP", "Harian"),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  CustomFadeAnimationWidget(
-                                    animation: _fadeFabAnimation,
-                                    child: CustomScaleContainerAnimationWidget(
-                                      animation: _scaleFabAnimation,
-                                      child: (_fabClicked == fab2Clicked)
-                                          ? CustomFadeAnimationWidget(
-                                              animation:
-                                                  _fadeEverythingWhenFab1Clicked,
-                                              child: _createFloatingButton(
-                                                  Icon(Icons.add_circle),
-                                                  "Add Absensi",
-                                                  fab1Clicked))
-                                          : _createFloatingButton(
-                                              Icon(Icons.add_circle),
-                                              "Add Absensi",
-                                              fab1Clicked),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          child: Container(
-                            width: widget.width,
-                            child: CustomTranslateAnimationWidget(
-                              animation: _translateFabAnimation2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                                  Container(
-                                    margin: EdgeInsets.only(bottom: 8),
-                                    child: CustomFadeAnimationWidget(
-                                      animation: _fadeFabTextAnimation,
-                                      child: CustomFadeAnimationWidget(
-                                        animation:
-                                            _fadeEverythingWhenFab1Clicked,
-                                        child: _createTextFab("CKP", "Harian"),
+                                    CustomFadeAnimationWidget(
+                                      animation: _fadeFabAnimation,
+                                      child:
+                                          CustomScaleContainerAnimationWidget(
+                                        animation: _scaleFabAnimation,
+                                        child: (_fabClicked == fab1Clicked)
+                                            ? CustomFadeAnimationWidget(
+                                                animation:
+                                                    _fadeEverythingWhenFab1Clicked,
+                                                child: _createFloatingButton(
+                                                    Icon(Icons.playlist_add),
+                                                    "Add CKP",
+                                                    fab2Clicked))
+                                            : _createFloatingButton(
+                                                Icon(Icons.playlist_add),
+                                                "Add CKP",
+                                                fab2Clicked),
                                       ),
                                     ),
-                                  ),
-                                  CustomFadeAnimationWidget(
-                                    animation: _fadeFabAnimation,
-                                    child: CustomScaleContainerAnimationWidget(
-                                      animation: _scaleFabAnimation,
-                                      child: (_fabClicked == fab1Clicked)
-                                          ? CustomFadeAnimationWidget(
-                                              animation:
-                                                  _fadeEverythingWhenFab1Clicked,
-                                              child: _createFloatingButton(
-                                                  Icon(Icons.playlist_add),
-                                                  "Add CKP",
-                                                  fab2Clicked))
-                                          : _createFloatingButton(
-                                              Icon(Icons.playlist_add),
-                                              "Add CKP",
-                                              fab2Clicked),
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                      ],
-                    )),
-              ),
-            ),
-            bottomNavigationBar: CustomTranslateAnimationWidget(
-                animation: _translateNavyBar,
-                child: BottomAppBar(
-                  elevation: 8,
-                  clipBehavior: Clip.antiAlias,
-                  child: CustomBottomNavBar(
-                    animationDuration: Duration(milliseconds: 300),
-                    items: [
-                      BottomNavyBarItem(icon: Icon(Icons.home), title: "Home"),
-                      BottomNavyBarItem(
-                          icon: Icon(Icons.date_range), title: "Absensi"),
-                      BottomNavyBarItem(
-                          icon: Icon(Icons.file_download), title: "Unduh"),
-                      BottomNavyBarItem(
-                          icon: Icon(Icons.exit_to_app), title: "Sign Out")
-                    ],
-                    onItemSelected: (index) {
-                      if (_fabOptionIsOpen) {
-                        _fabAnimationController.reverse();
-                        _fabOptionIsOpen = false;
-                      }
-                      _fadePageAnimationController.reset();
-                      setState(() {
-                        _currentIndex = index;
-                      });
-                      if (_fadePageAnimation.status ==
-                          AnimationStatus.completed) {
-                        _fadePageAnimationController.reset();
-                      }
-                      _fadePageAnimationController.forward().orCancel;
-                    },
-                    selectedIndex: _currentIndex,
-                  ),
-                  shape: CircularNotchedRectangle(),
-                )),
-            floatingActionButton: CustomFadeAnimationWidget(
-              animation: _fadeEverythingWhenFab1Clicked,
-              child: FloatingActionButton(
-                heroTag: "main fab",
-                child: AnimatedBuilder(
-                  animation: _fabRotate,
-                  builder: (context, child) {
-                    return Transform.rotate(
-                      angle: _fabRotate.value,
-                      child: child,
-                    );
-                  },
-                  child: Icon(Icons.add),
+                          )
+                        ],
+                      )),
                 ),
-                onPressed: () {
-                  if (_fabOptionIsOpen) {
-                    _fabAnimationController.reverse();
-                    _fabOptionIsOpen = false;
-                  } else {
-                    _fabAnimationController.forward().orCancel;
-                    _fabOptionIsOpen = true;
-                  }
-                },
-                mini: true,
               ),
+              bottomNavigationBar: CustomTranslateAnimationWidget(
+                  animation: _translateNavyBar,
+                  child: BottomAppBar(
+                    elevation: 8,
+                    clipBehavior: Clip.antiAlias,
+                    child: CustomBottomNavBar(
+                      animationDuration: Duration(milliseconds: 300),
+                      items: [
+                        BottomNavyBarItem(
+                            icon: Icon(Icons.home), title: "Home"),
+                        BottomNavyBarItem(
+                            icon: Icon(Icons.date_range), title: "Calendar"),
+                        BottomNavyBarItem(
+                            icon: Icon(Icons.file_download), title: "Unduh"),
+                        BottomNavyBarItem(
+                            icon: Icon(Icons.exit_to_app), title: "Sign Out")
+                      ],
+                      onItemSelected: (index) {
+                        if (_fabOptionIsOpen) {
+                          _fabAnimationController.reverse();
+                          _fabOptionIsOpen = false;
+                        }
+                        _fadePageAnimationController.reset();
+                        setState(() {
+                          _currentIndex = index;
+                        });
+                        if (_fadePageAnimation.status ==
+                            AnimationStatus.completed) {
+                          _fadePageAnimationController.reset();
+                        }
+                        _fadePageAnimationController.forward().orCancel;
+                      },
+                      selectedIndex: _currentIndex,
+                    ),
+                    shape: CircularNotchedRectangle(),
+                  )),
+              floatingActionButton: CustomFadeAnimationWidget(
+                animation: _fadeEverythingWhenFab1Clicked,
+                child: FloatingActionButton(
+                  heroTag: "main fab",
+                  child: AnimatedBuilder(
+                    animation: _fabRotate,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: _fabRotate.value,
+                        child: child,
+                      );
+                    },
+                    child: Icon(Icons.add),
+                  ),
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return TambahKegiatanPage(
+                          pegawai: widget.selectedPegawai);
+                    }));
+
+                    /*if (_fabOptionIsOpen) {
+                      _fabAnimationController.reverse();
+                      _fabOptionIsOpen = false;
+                    } else {
+                      _fabAnimationController.forward().orCancel;
+                      _fabOptionIsOpen = true;
+                    }*/
+                  },
+                  mini: true,
+                ),
+              ),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
             ),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
           );
   }
 

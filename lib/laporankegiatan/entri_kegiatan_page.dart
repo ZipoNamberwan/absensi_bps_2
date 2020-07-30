@@ -1,3 +1,4 @@
+import 'package:absensi_bps_2/classes/keterangan_absensi.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/entrikegiatan/entri_kegiatan_bloc.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/entrikegiatan/entri_kegiatan_event.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/entrikegiatan/entri_kegiatan_state.dart';
@@ -12,8 +13,12 @@ import 'package:intl/intl.dart';
 
 class TambahKegiatanPage extends StatefulWidget {
   final Kegiatan kegiatan;
+  final DateTime selectedDateTime;
+  final Pegawai pegawai;
 
-  const TambahKegiatanPage({Key key, this.kegiatan}) : super(key: key);
+  const TambahKegiatanPage(
+      {Key key, this.kegiatan, this.pegawai, this.selectedDateTime})
+      : super(key: key);
 
   @override
   _TambahKegiatanPageState createState() => _TambahKegiatanPageState();
@@ -72,6 +77,9 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
     _keteranganController.addListener(() {
       _bloc.add(UpdateKeterangan(_keteranganController.text));
     });
+    /*if (widget.selectedDateTime != null) {
+      _bloc.add(UpdateTanggal(widget.selectedDateTime));
+    }*/
   }
 
   @override
@@ -84,7 +92,7 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
   Widget build(BuildContext context) {
     return BlocProvider<EntriKegiatanBloc>(
       create: (context) {
-        return _bloc..add(InitPage(widget.kegiatan));
+        return _bloc..add(InitPage(widget.kegiatan, widget.selectedDateTime));
       },
       child: BlocConsumer<EntriKegiatanBloc, EntriKegiatanState>(
         listener: (context, state) {
@@ -158,6 +166,7 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                         fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
+                backgroundColor: Colors.white,
                 body: SingleChildScrollView(
                   child: Container(
                     padding: EdgeInsets.symmetric(vertical: 32, horizontal: 20),
@@ -174,18 +183,21 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
-                            DatePicker.showDatePicker(context,
-                                showTitleActions: true,
-                                minTime: DateTime(2019, 1, 1),
-                                onConfirm: (date) {
-                              _bloc.add(UpdateTanggal(date));
-                            },
-                                currentTime: state.kegiatan.tanggal != null
-                                    ? state.kegiatan.tanggal
-                                    : DateTime.now(),
-                                locale: LocaleType.id);
-                          },
+                          onTap: widget.selectedDateTime != null
+                              ? () {}
+                              : () {
+                                  DatePicker.showDatePicker(context,
+                                      showTitleActions: true,
+                                      minTime: DateTime(2019, 1, 1),
+                                      onConfirm: (date) {
+                                    _bloc.add(UpdateTanggal(date));
+                                  },
+                                      currentTime:
+                                          state.kegiatan.tanggal != null
+                                              ? state.kegiatan.tanggal
+                                              : DateTime.now(),
+                                      locale: LocaleType.id);
+                                },
                           child: Container(
                             decoration: BoxDecoration(
                                 color: Colors.white,
@@ -196,10 +208,13 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                             margin: EdgeInsets.only(bottom: 15),
                             child: TextField(
                               controller: TextEditingController(
-                                  text: state.kegiatan.tanggal != null
-                                      ? DateFormat('EEE, d MMM yyyy')
-                                          .format(state.kegiatan.tanggal)
-                                      : ""),
+                                  text: widget.selectedDateTime != null
+                                      ? DateFormat("yyyy-MM-dd")
+                                          .format(widget.selectedDateTime)
+                                      : state.kegiatan.tanggal != null
+                                          ? DateFormat('EEE, d MMM yyyy')
+                                              .format(state.kegiatan.tanggal)
+                                          : ""),
                               decoration: InputDecoration(
                                   enabled: false,
                                   border: InputBorder.none,
@@ -226,7 +241,9 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                           onTap: () async {
                             DetailKegiatan result = await Navigator.push(
                                 context, MaterialPageRoute(builder: (context) {
-                              return PlihKegiatanPage();
+                              return PlihKegiatanPage(
+                                pegawai: widget.pegawai,
+                              );
                             }));
 
                             if (result != null) {
@@ -506,8 +523,10 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
                             onTap: state.kegiatan.isValid()
                                 ? () {
                                     widget.kegiatan == null
-                                        ? _bloc.add(PostKegiatan("57639"))
-                                        : _bloc.add(PostEditKegiatan("57639"));
+                                        ? _bloc.add(
+                                            PostKegiatan(widget.pegawai.nip))
+                                        : _bloc.add(PostEditKegiatan(
+                                            widget.pegawai.nip));
                                   }
                                 : () {},
                             child: Stack(
