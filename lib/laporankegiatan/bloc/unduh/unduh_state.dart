@@ -22,5 +22,8 @@ class SuccessState extends UnduhState {
 }
 
 class ErrorState extends UnduhState {
-  ErrorState({DateTime from, DateTime to}) : super(from: from, to: to);
+  final String message;
+
+  ErrorState(this.message, {DateTime from, DateTime to})
+      : super(from: from, to: to);
 }

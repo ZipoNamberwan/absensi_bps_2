@@ -8,11 +8,12 @@ import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
 class DataProvider {
-  String developmentServerUrl = "http://192.168.43.247/newapiabsensi/web/";
-  String productionServerUrl = "http://bpsnttapp.com/newapiabsensi/web/";
+  String serverUrl = "http://192.168.43.247/newapiabsensi/web/";
+
+  //String serverUrl = "http://bpsnttapp.com/newapiabsensi/web/";
 
   Future<dynamic> tambahKegiatan(String nip, Kegiatan kegiatan) async {
-    String url = "${developmentServerUrl}kegiatan";
+    String url = "${serverUrl}kegiatan";
 
     Map<String, dynamic> formData = {
       //required
@@ -64,7 +65,7 @@ class DataProvider {
   }
 
   Future<dynamic> updateKegiatan(String nip, Kegiatan kegiatan) async {
-    String url = "${developmentServerUrl}kegiatan/" + kegiatan.id;
+    String url = "${serverUrl}kegiatan/" + kegiatan.id;
 
     Map<String, dynamic> formData = {
       //required
@@ -110,8 +111,7 @@ class DataProvider {
   }
 
   Future<dynamic> getKegiatan(String nip, String tanggal) async {
-    String url =
-        "${developmentServerUrl}kegiatan?tanggal=$tanggal&pegawai=$nip";
+    String url = "${serverUrl}kegiatan?tanggal=$tanggal&pegawai=$nip";
 
     var responseJson;
     try {
@@ -127,7 +127,7 @@ class DataProvider {
   }
 
   Future<dynamic> hapusKegiatan(String id) async {
-    String url = "${developmentServerUrl}kegiatan/$id";
+    String url = "${serverUrl}kegiatan/$id";
 
     var responseJson;
     try {
@@ -144,7 +144,29 @@ class DataProvider {
 
   Future<dynamic> getHistoryKegiatan(String nip, String searchText) async {
     String url =
-        "${developmentServerUrl}history-kegiatan?fields=namakegiatan,satuankegiatan&namakegiatan=$searchText&pegawai=$nip";
+        "${serverUrl}history-kegiatan?fields=namakegiatan,satuankegiatan&namakegiatan=$searchText&pegawai=$nip";
+
+    var responseJson;
+    try {
+      final response = await Dio().get(
+        url,
+        options: Options(
+          headers: {
+            Headers.contentTypeHeader: "application/json", // set content-length
+          },
+        ),
+      );
+      responseJson = _returnResponse(response);
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+
+    return responseJson;
+  }
+
+  Future<dynamic> download(String nip, String start, String end) async {
+    String url =
+        "${serverUrl}kegiatan/download/$nip/$start/$end";
 
     var responseJson;
     try {
@@ -165,7 +187,7 @@ class DataProvider {
   }
 
   Future<dynamic> getStatus() async {
-    String url = "${developmentServerUrl}statuskegiatan";
+    String url = "${serverUrl}statuskegiatan";
 
     var responseJson;
     try {
@@ -181,7 +203,7 @@ class DataProvider {
   }
 
   Future<dynamic> getSatuanDurasi() async {
-    String url = "${developmentServerUrl}satuandurasi";
+    String url = "${serverUrl}satuandurasi";
 
     var responseJson;
     try {

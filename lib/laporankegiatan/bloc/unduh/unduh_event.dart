@@ -25,7 +25,10 @@ class ChangeToDate extends UnduhEvent {
 }
 
 class StartDownload extends UnduhEvent {
-  StartDownload();
+
+  final String nip;
+
+  StartDownload(this.nip);
 
   @override
   List<Object> get props => [];

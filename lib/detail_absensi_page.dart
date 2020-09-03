@@ -210,6 +210,21 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
     }
   }
 
+  void _navigateToEditKegiatanPage(Kegiatan kegiatan) async {
+    Kegiatan result = await Navigator.push(context,
+        PageRouteBuilder(pageBuilder: (context, anim1, anim2) {
+      return TambahKegiatanPage(
+        pegawai: widget.pegawai,
+        selectedDateTime: widget.dateTime,
+        kegiatan: kegiatan,
+      );
+    }));
+
+    if (result != null) {
+      _bloc.add(UpdateKegiatanHarian(result));
+    }
+  }
+
   Widget createPage() {
     return BlocProvider<LaporanHarianBloc>(
       create: (context) {
@@ -358,16 +373,8 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                             isLoading: isLoading,
                             kegiatan: state.listKegiatan[i],
                             onEditTap: () async {
-                              Kegiatan result = await Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) {
-                                return TambahKegiatanPage(
-                                  kegiatan: state.listKegiatan[i],
-                                );
-                              }));
-
-                              if (result != null) {
-                                _bloc.add(UpdateKegiatanHarian(result));
-                              }
+                              _navigateToEditKegiatanPage(
+                                  state.listKegiatan[i]);
                             },
                             onRemoveTap: () {
                               _bloc.add(StartHapusKegiatanHarian(
@@ -1224,7 +1231,8 @@ class KegiatanItemWidget extends StatelessWidget {
                       SizedBox(
                         width: 20,
                       ),
-                      kegiatan.durasi != null && kegiatan.durasi > 0
+                      (kegiatan.durasi != null && kegiatan.durasi > 0) &&
+                              (kegiatan.satuanDurasi != null)
                           ? Row(
                               children: [
                                 Icon(

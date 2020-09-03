@@ -1,3 +1,4 @@
+import 'package:absensi_bps_2/classes/app_exceptions.dart';
 import 'package:absensi_bps_2/laporankegiatan/data_provider.dart';
 import 'package:absensi_bps_2/laporankegiatan/kegiatan_model.dart';
 import 'package:absensi_bps_2/laporankegiatan/post.dart';
@@ -72,4 +73,13 @@ class DataRepository {
     }
   }
 
+  Future<dynamic> download(String nip, String start, String end) async {
+    Post response = await provider.download(nip, start, end);
+    if (response.isSuccess) {
+      String urlDownload = response.data as String;
+      return urlDownload;
+    } else {
+      throw AppException(response.message, '');
+    }
+  }
 }

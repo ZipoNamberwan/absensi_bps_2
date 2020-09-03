@@ -621,7 +621,8 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                   onTap: state.isValid()
                       ? () {
                           //download here
-                          _unduhBloc.add(StartDownload());
+                          _unduhBloc
+                              .add(StartDownload(widget.selectedPegawai.nip));
                         }
                       : () {},
                   child: Stack(
