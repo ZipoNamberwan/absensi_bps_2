@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/bloc.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/unduh_event.dart';
@@ -7,9 +6,7 @@ import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/unduh_state.dart';
 import 'package:absensi_bps_2/laporankegiatan/data_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
-import 'package:downloads_path_provider/downloads_path_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
 class UnduhBloc extends Bloc<UnduhEvent, UnduhState> {
@@ -48,7 +45,7 @@ class UnduhBloc extends Bloc<UnduhEvent, UnduhState> {
           DateFormat('yyyy-MM-dd').format(state.to));
 
       //download here
-      final dir = await _getDownloadDirectory();
+      final dir = "/storage/emulated/0/Download/";
 
       Map<String, dynamic> mapResult = {
         'isSuccess': false,
@@ -57,7 +54,7 @@ class UnduhBloc extends Bloc<UnduhEvent, UnduhState> {
         'filename': null,
       };
 
-      final savePath = path.join(dir.path, (result as Map)['filename']);
+      final savePath = path.join(dir, (result as Map)['filename']);
 
       final response = await Dio().download(
         (result as Map)['url'],
@@ -79,11 +76,11 @@ class UnduhBloc extends Bloc<UnduhEvent, UnduhState> {
       yield ErrorState(e.toString(), from: state.from, to: state.to);
     }
   }
-
+/*
   Future<Directory> _getDownloadDirectory() async {
     if (Platform.isAndroid) {
       return await DownloadsPathProvider.downloadsDirectory;
     }
     return await getApplicationDocumentsDirectory();
-  }
+  }*/
 }
