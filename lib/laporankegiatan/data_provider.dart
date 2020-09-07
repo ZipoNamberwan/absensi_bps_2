@@ -8,9 +8,9 @@ import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
 class DataProvider {
-  String serverUrl = "http://192.168.43.247/newapiabsensi/web/";
+  //String serverUrl = "http://192.168.43.247/newapiabsensi/web/";
 
-  //String serverUrl = "http://bpsnttapp.com/newapiabsensi/web/";
+  String serverUrl = "http://bpsnttapp.com/newapiabsensi/web/";
 
   Future<dynamic> tambahKegiatan(String nip, Kegiatan kegiatan) async {
     String url = "${serverUrl}kegiatan";
@@ -165,8 +165,7 @@ class DataProvider {
   }
 
   Future<dynamic> initDownload(String nip, String start, String end) async {
-    String url =
-        "${serverUrl}kegiatan/download/$nip/$start/$end";
+    String url = "${serverUrl}kegiatan/download/$nip/$start/$end";
 
     var responseJson;
     try {
@@ -239,5 +238,4 @@ class DataProvider {
         throw FetchDataException('Error Communicating with server');
     }
   }
-
 }
