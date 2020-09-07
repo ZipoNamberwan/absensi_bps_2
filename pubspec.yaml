@@ -36,6 +36,11 @@ dependencies:
   simple_auth_flutter: ^2.0.7
   flutter_webview_plugin: ^0.3.11
   flutter_inappwebview: 4.0.0
+  downloads_path_provider: ^0.1.0
+  path_provider: ^1.6.14
+  permission_handler: ^5.0.1+1
+  open_file: ^3.0.1
+  flutter_local_notifications: ^1.4.4+4
 
 
   # The following adds the Cupertino Icons font to your application.

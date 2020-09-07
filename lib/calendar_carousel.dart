@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:absensi_bps_2/classes/bidang.dart';
 import 'package:absensi_bps_2/classes/custom_bottom_nav_bar.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/bloc.dart';
+import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/unduh_bloc.dart';
 import 'package:absensi_bps_2/laporankegiatan/entri_kegiatan_page.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:date_utils/date_utils.dart';
@@ -494,169 +495,241 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         onPressedDrawer: widget.onPressedDrawer,
       );
 
-      Widget unduhPage = BlocBuilder<UnduhBloc, UnduhState>(
+      Widget unduhPage = BlocConsumer<UnduhBloc, UnduhState>(
+        listener: (context, state) {
+          if (state is SuccessState) {
+            showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    title: Text(
+                      "Success",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    content: Text(
+                      "File ada di folder download. Nama file: " +
+                          state.fileName,
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    actions: <Widget>[
+                      FlatButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text("OK")),
+                    ],
+                  );
+                },
+                barrierDismissible: true);
+          } else if (state is ErrorState) {
+            showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    title: Text(
+                      "Error",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    content: Text(
+                      state.message,
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    actions: <Widget>[
+                      FlatButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text("OK")),
+                    ],
+                  );
+                },
+                barrierDismissible: true);
+          }
+        },
         builder: (context, state) {
-          return Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height -
-                kBottomNavigationBarHeight -
-                MediaQuery.of(context).padding.top,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: kBottomNavigationBarHeight,
-                  margin: EdgeInsets.only(left: 20),
-                  child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Unduh Laporan Harian",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18),
-                      )),
-                ),
-                Padding(
-                  padding:
-                      EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(flex: 2, child: Text("Dari: ")),
-                          Expanded(
-                            flex: 8,
-                            child: GestureDetector(
-                              onTap: () {
-                                DatePicker.showDatePicker(context,
-                                    showTitleActions: true,
-                                    minTime: DateTime(2019, 1, 1),
-                                    currentTime: state.from, onConfirm: (date) {
-                                  _unduhBloc.add(ChangeFromDate(date));
-                                }, locale: LocaleType.id);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: Colors.black12, width: 0.5)),
-                                padding: EdgeInsets.symmetric(horizontal: 10),
-                                child: TextField(
-                                  controller: TextEditingController(
-                                      text: state.from != null
-                                          ? DateFormat("yyyy-MM-dd")
-                                              .format(state.from)
-                                          : ""),
-                                  decoration: InputDecoration(
-                                      enabled: false,
-                                      border: InputBorder.none,
-                                      hintText: "dd/mm/yyyy",
-                                      hintStyle: TextStyle(fontSize: 12),
-                                      suffixIcon: Icon(
-                                        Icons.calendar_today,
-                                        color: Colors.black54,
-                                        size: 23,
-                                      )),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(flex: 2, child: Text("Sampai: ")),
-                          Expanded(
-                            flex: 8,
-                            child: GestureDetector(
-                              onTap: () {
-                                DatePicker.showDatePicker(context,
-                                    showTitleActions: true,
-                                    minTime: DateTime(2019, 1, 1),
-                                    onConfirm: (date) {
-                                  _unduhBloc.add(ChangeToDate(date));
-                                },
-                                    currentTime: state.to,
-                                    locale: LocaleType.id);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: Colors.black12, width: 0.5)),
-                                padding: EdgeInsets.symmetric(horizontal: 10),
-                                child: TextField(
-                                  controller: TextEditingController(
-                                      text: state.to != null
-                                          ? DateFormat("yyyy-MM-dd")
-                                              .format(state.to)
-                                          : ""),
-                                  decoration: InputDecoration(
-                                      enabled: false,
-                                      border: InputBorder.none,
-                                      hintText: "dd/mm/yyyy",
-                                      hintStyle: TextStyle(fontSize: 12),
-                                      suffixIcon: Icon(
-                                        Icons.calendar_today,
-                                        color: Colors.black54,
-                                        size: 23,
-                                      )),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                InkWell(
-                  onTap: state.isValid()
-                      ? () {
-                          //download here
-                          _unduhBloc
-                              .add(StartDownload(widget.selectedPegawai.nip));
-                        }
-                      : () {},
-                  child: Stack(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        margin: EdgeInsets.symmetric(horizontal: 20),
-                        width: MediaQuery.of(context).size.width,
-                        decoration: BoxDecoration(
-                            color: mainColor,
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Center(
+          return Stack(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height -
+                    kBottomNavigationBarHeight -
+                    MediaQuery.of(context).padding.top,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: kBottomNavigationBarHeight,
+                      margin: EdgeInsets.only(left: 20),
+                      child: Align(
+                          alignment: Alignment.centerLeft,
                           child: Text(
-                            "UNDUH",
+                            "Unduh Laporan Harian",
                             style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          )),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: 20, right: 20, top: 20, bottom: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(flex: 2, child: Text("Dari: ")),
+                              Expanded(
+                                flex: 8,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    DatePicker.showDatePicker(context,
+                                        showTitleActions: true,
+                                        minTime: DateTime(2019, 1, 1),
+                                        currentTime: state.from,
+                                        onConfirm: (date) {
+                                      _unduhBloc.add(ChangeFromDate(date));
+                                    }, locale: LocaleType.id);
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: Colors.black12, width: 0.5)),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 10),
+                                    child: TextField(
+                                      controller: TextEditingController(
+                                          text: state.from != null
+                                              ? DateFormat("yyyy-MM-dd")
+                                                  .format(state.from)
+                                              : ""),
+                                      decoration: InputDecoration(
+                                          enabled: false,
+                                          border: InputBorder.none,
+                                          hintText: "dd/mm/yyyy",
+                                          hintStyle: TextStyle(fontSize: 12),
+                                          suffixIcon: Icon(
+                                            Icons.calendar_today,
+                                            color: Colors.black54,
+                                            size: 23,
+                                          )),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(flex: 2, child: Text("Sampai: ")),
+                              Expanded(
+                                flex: 8,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    DatePicker.showDatePicker(context,
+                                        showTitleActions: true,
+                                        minTime: DateTime(2019, 1, 1),
+                                        onConfirm: (date) {
+                                      _unduhBloc.add(ChangeToDate(date));
+                                    },
+                                        currentTime: state.to,
+                                        locale: LocaleType.id);
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: Colors.black12, width: 0.5)),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 10),
+                                    child: TextField(
+                                      controller: TextEditingController(
+                                          text: state.to != null
+                                              ? DateFormat("yyyy-MM-dd")
+                                                  .format(state.to)
+                                              : ""),
+                                      decoration: InputDecoration(
+                                          enabled: false,
+                                          border: InputBorder.none,
+                                          hintText: "dd/mm/yyyy",
+                                          hintStyle: TextStyle(fontSize: 12),
+                                          suffixIcon: Icon(
+                                            Icons.calendar_today,
+                                            color: Colors.black54,
+                                            size: 23,
+                                          )),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      AnimatedOpacity(
-                        opacity: state.isValid() ? 0.0 : 0.5,
-                        child: Container(
-                          height: 50,
-                          margin: EdgeInsets.symmetric(horizontal: 20),
-                          color: Colors.white,
-                        ),
-                        duration: Duration(milliseconds: 300),
+                    ),
+                    InkWell(
+                      onTap: state.isValid()
+                          ? () {
+                              //download here
+                              _unduhBloc.add(
+                                  StartDownload(widget.selectedPegawai.nip));
+                            }
+                          : () {},
+                      child: Stack(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(vertical: 15),
+                            margin: EdgeInsets.symmetric(horizontal: 20),
+                            width: MediaQuery.of(context).size.width,
+                            decoration: BoxDecoration(
+                                color: mainColor,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Center(
+                              child: Text(
+                                "UNDUH",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          AnimatedOpacity(
+                            opacity: state.isValid() ? 0.0 : 0.5,
+                            child: Container(
+                              height: 50,
+                              margin: EdgeInsets.symmetric(horizontal: 20),
+                              color: Colors.white,
+                            ),
+                            duration: Duration(milliseconds: 300),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              ],
-            ),
+                    )
+                  ],
+                ),
+              ),
+              state is LoadingState
+                  ? Container(
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width,
+                      decoration:
+                          BoxDecoration(color: Colors.black.withOpacity(0.5)),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : SizedBox(),
+            ],
           );
         },
       );

@@ -73,11 +73,13 @@ class DataRepository {
     }
   }
 
-  Future<dynamic> download(String nip, String start, String end) async {
-    Post response = await provider.download(nip, start, end);
+  Future<dynamic> initDownload(String nip, String start, String end) async {
+    Post response = await provider.initDownload(nip, start, end);
     if (response.isSuccess) {
-      String urlDownload = response.data as String;
-      return urlDownload;
+      Map<String, String> map = Map();
+      map['url'] = response.data['url'];
+      map['filename'] = response.data['filename'];
+      return map;
     } else {
       throw AppException(response.message, '');
     }

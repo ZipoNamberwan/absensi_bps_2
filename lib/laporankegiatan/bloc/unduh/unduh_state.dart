@@ -18,12 +18,22 @@ class LoadingState extends UnduhState {
 }
 
 class SuccessState extends UnduhState {
-  SuccessState({DateTime from, DateTime to}) : super(from: from, to: to);
+  final String fileName;
+
+  SuccessState(this.fileName, {DateTime from, DateTime to})
+      : super(from: from, to: to);
 }
 
 class ErrorState extends UnduhState {
   final String message;
 
   ErrorState(this.message, {DateTime from, DateTime to})
+      : super(from: from, to: to);
+}
+
+class OnProgressDownload extends UnduhState {
+  final String progress;
+
+  OnProgressDownload(this.progress, {DateTime from, DateTime to})
       : super(from: from, to: to);
 }
