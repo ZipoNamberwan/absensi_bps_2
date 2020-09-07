@@ -16,12 +16,15 @@ import 'package:absensi_bps_2/src/calendar_header.dart';
 import 'package:absensi_bps_2/src/weekday_row.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 export 'package:absensi_bps_2/classes/event_list.dart';
 import 'package:absensi_bps_2/classes/detail_absensi.dart';
 import 'package:absensi_bps_2/api/api_tad_absensi.dart';
 import 'package:absensi_bps_2/api/api_custom.dart';
+import 'package:open_file/open_file.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
 
 import 'classes/keterangan_absensi.dart';
@@ -243,9 +246,20 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   /// If the setState called from this class, don't reload the selectedDate, but it should reload selected date if called from external class
   bool _isReloadSelectedDate = true;
 
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
   @override
   initState() {
     super.initState();
+
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    final android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    final iOS = IOSInitializationSettings();
+    final initSettings = InitializationSettings(android, iOS);
+
+    flutterLocalNotificationsPlugin.initialize(initSettings,
+        onSelectNotification: _onSelectNotification);
+
     initializeDateFormatting();
 
     /// setup pageController
@@ -510,7 +524,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     ),
                     content: Text(
                       "File ada di folder download. Nama file: " +
-                          state.fileName,
+                          state.result['filename'],
                       style: TextStyle(color: Colors.black54),
                     ),
                     actions: <Widget>[
@@ -523,6 +537,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                   );
                 },
                 barrierDismissible: true);
+            _showNotification(state.result);
           } else if (state is ErrorState) {
             showDialog(
                 context: context,
@@ -679,10 +694,14 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                     ),
                     InkWell(
                       onTap: state.isValid()
-                          ? () {
+                          ? () async {
                               //download here
-                              _unduhBloc.add(
-                                  StartDownload(widget.selectedPegawai.nip));
+                              final isPermissionStatusGranted =
+                                  await _requestPermissions();
+                              if (isPermissionStatusGranted) {
+                                _unduhBloc.add(
+                                    StartDownload(widget.selectedPegawai.nip));
+                              }
                             }
                           : () {},
                       child: Stack(
@@ -2130,6 +2149,43 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
         ),
       ),
     );
+  }
+
+  Future<void> _showNotification(Map<String, dynamic> downloadStatus) async {
+    final android = AndroidNotificationDetails(
+        'absensi id', 'absensi name', 'absensi description',
+        priority: Priority.High, importance: Importance.Max);
+    final iOS = IOSNotificationDetails();
+    final platform = NotificationDetails(android, iOS);
+    final json = jsonEncode(downloadStatus);
+    final isSuccess = downloadStatus['isSuccess'];
+
+    await flutterLocalNotificationsPlugin.show(
+        0, // notification id
+        isSuccess ? 'Success' : 'Failure',
+        isSuccess
+            ? 'File has been downloaded successfully!'
+            : 'There was an error while downloading the file.',
+        platform,
+        payload: json);
+  }
+
+  Future<void> _onSelectNotification(String json) async {
+    final obj = jsonDecode(json);
+
+    if (obj['isSuccess']) {
+      OpenFile.open(obj['filePath']);
+    }
+  }
+
+  Future<bool> _requestPermissions() async {
+    var permission = await Permission.storage.status;
+
+    if (permission != PermissionStatus.granted) {
+      permission = await Permission.storage.request();
+    }
+
+    return permission == PermissionStatus.granted;
   }
 }
 

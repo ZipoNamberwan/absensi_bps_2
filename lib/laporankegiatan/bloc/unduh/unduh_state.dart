@@ -18,9 +18,9 @@ class LoadingState extends UnduhState {
 }
 
 class SuccessState extends UnduhState {
-  final String fileName;
+  final Map<String, dynamic> result;
 
-  SuccessState(this.fileName, {DateTime from, DateTime to})
+  SuccessState(this.result, {DateTime from, DateTime to})
       : super(from: from, to: to);
 }
 
