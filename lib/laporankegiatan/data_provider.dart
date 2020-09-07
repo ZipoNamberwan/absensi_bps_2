@@ -52,7 +52,12 @@ class DataProvider {
         data: formData,
         options: Options(
           headers: {
-            Headers.contentTypeHeader: "application/json", // set content-length
+            Headers.contentTypeHeader: "application/json",
+            // set content-length
+          },
+          followRedirects: false,
+          validateStatus: (status) {
+            return status < 500;
           },
         ),
       );
@@ -98,7 +103,8 @@ class DataProvider {
         data: formData,
         options: Options(
           headers: {
-            Headers.contentTypeHeader: "application/json", // set content-length
+            Headers.contentTypeHeader: "application/json",
+            // set content-length
           },
         ),
       );
@@ -220,6 +226,14 @@ class DataProvider {
   dynamic _returnResponse(var response) {
     switch (response.statusCode) {
       case 200:
+        //var responseJson;
+        //responseJson = json.decode(response.data);
+        return Post(
+            isSuccess: response.data['success'],
+            code: response.data['code'],
+            message: response.data['message'],
+            data: response.data['data']);
+      case 302:
         //var responseJson;
         //responseJson = json.decode(response.data);
         return Post(

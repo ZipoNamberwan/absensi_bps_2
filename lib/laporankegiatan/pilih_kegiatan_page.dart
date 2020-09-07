@@ -236,23 +236,32 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                             ),
                           );
                         }
-                        return SliverList(
-                            delegate: SliverChildBuilderDelegate((context, i) {
-                          return HistoryKegiatanItemWidget(
-                            detailKegiatan: state.listHistoryKegiatan[i],
-                            onTapIcon: () {
-                              _namaController.text =
-                                  state.listHistoryKegiatan[i].nama;
-                              _satuanController.text =
-                                  state.listHistoryKegiatan[i].satuan;
-
-                              _bloc.add(UpdateNamaKegiatan(
-                                  widget.pegawai.nip, _namaController.text));
-                              _bloc.add(
-                                  UpdateSatuanKegiatan(_satuanController.text));
-                            },
+                        if (state.listHistoryKegiatan.isEmpty) {
+                          return SliverToBoxAdapter(
+                            child: Container(
+                              child: Text("Belum ada history kegiatan"),
+                            ),
                           );
-                        }, childCount: state.listHistoryKegiatan.length));
+                        } else {
+                          return SliverList(
+                              delegate:
+                                  SliverChildBuilderDelegate((context, i) {
+                            return HistoryKegiatanItemWidget(
+                              detailKegiatan: state.listHistoryKegiatan[i],
+                              onTapIcon: () {
+                                _namaController.text =
+                                    state.listHistoryKegiatan[i].nama;
+                                _satuanController.text =
+                                    state.listHistoryKegiatan[i].satuan;
+
+                                _bloc.add(UpdateNamaKegiatan(
+                                    widget.pegawai.nip, _namaController.text));
+                                _bloc.add(UpdateSatuanKegiatan(
+                                    _satuanController.text));
+                              },
+                            );
+                          }, childCount: state.listHistoryKegiatan.length));
+                        }
                       },
                     ),
                   ],
