@@ -155,9 +155,14 @@ class _TambahKegiatanPageState extends State<TambahKegiatanPage> {
             children: [
               Scaffold(
                 appBar: AppBar(
-                  leading: Icon(
-                    Icons.arrow_back_ios,
-                    color: Colors.white,
+                  leading: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                    ),
                   ),
                   backgroundColor: mainColor,
                   title: Text(

@@ -8,9 +8,9 @@ import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
 class DataProvider {
-  //String serverUrl = "http://192.168.43.247/newapiabsensi/web/";
+  String serverUrl = "http://192.168.43.247/newapiabsensi/web/";
 
-  String serverUrl = "http://bpsnttapp.com/newapiabsensi/web/";
+  //String serverUrl = "http://bpsnttapp.com/newapiabsensi/web/";
 
   Future<dynamic> tambahKegiatan(String nip, Kegiatan kegiatan) async {
     String url = "${serverUrl}kegiatan";
@@ -23,11 +23,11 @@ class DataProvider {
       "satuankegiatan": kegiatan.detailKegiatan.satuan,
       "volume": kegiatan.volume.toString(),
       //optional
-      //"durasi": kegiatan.durasi.toString(),
-      //"satuandurasi": kegiatan.satuanDurasi.id,
-      //"statuskegiatan": kegiatan.statusKegiatan.id,
-      //"pemberitugas": kegiatan.pemberiTugas,
-      //"keterangan": kegiatan.keterangan,
+      /*"durasi": kegiatan.durasi.toString(),
+      "satuandurasi": kegiatan.satuanDurasi.id,
+      "statuskegiatan": kegiatan.statusKegiatan.id,
+      "pemberitugas": kegiatan.pemberiTugas,
+      "keterangan": kegiatan.keterangan,*/
     };
     if (kegiatan.durasi != null) {
       formData['durasi'] = kegiatan.durasi.toString();

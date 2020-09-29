@@ -1,3 +1,4 @@
+import 'package:absensi_bps_2/classes/rounded_image_widget.dart';
 import 'package:absensi_bps_2/classes/statistik.dart';
 import 'package:absensi_bps_2/classes/statistik_tile_widget.dart';
 import 'package:absensi_bps_2/classes/statistik_tile_widget_empty.dart';
@@ -10,7 +11,6 @@ import 'package:intl/intl.dart';
 
 import 'classes/detail_absensi.dart';
 import 'classes/keterangan_absensi.dart';
-import 'classes/rounded_image_widget.dart';
 
 class HomePage extends StatefulWidget {
   final Pegawai pegawai;
@@ -54,9 +54,48 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           SingleChildScrollView(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 SizedBox(
                   height: kToolbarHeight,
+                  child: Material(
+                    elevation: 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(
+                                  color: Colors.black12, width: 1.0))),
+                      padding: EdgeInsets.only(left: 20, right: 20),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: [
+                            ClipOval(
+                              child: Image.asset(
+                                "images/ic_launcher.png",
+                                width: 40,
+                                height: 40,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Text(
+                                "Laporan Harian dan Absensi",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Colors.black87),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -103,7 +142,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(
-                            right: 16.0, bottom: 16, top: 16),
+                            right: 16.0, bottom: 16, top: 8),
                         child: Material(
                           elevation: 2,
                           borderRadius:
@@ -280,7 +319,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          SizedBox(
+          /*SizedBox(
             height: kToolbarHeight,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -311,13 +350,13 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-          ),
+          ),*/
         ],
       ),
     );
   }
 
-  Future<void> _logout() async {
+/*  Future<void> _logout() async {
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
       return LogOutSSO();
     }));
@@ -345,5 +384,5 @@ class _HomePageState extends State<HomePage> {
             ],
           );
         });
-  }
+  }*/
 }

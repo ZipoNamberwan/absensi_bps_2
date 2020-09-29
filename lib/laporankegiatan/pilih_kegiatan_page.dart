@@ -239,7 +239,7 @@ class _PlihKegiatanPageState extends State<PlihKegiatanPage> {
                         if (state.listHistoryKegiatan.isEmpty) {
                           return SliverToBoxAdapter(
                             child: Container(
-                              child: Text("Belum ada history kegiatan"),
+                              child: Text("Tidak ada history kegiatan"),
                             ),
                           );
                         } else {

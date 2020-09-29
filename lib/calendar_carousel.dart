@@ -3,9 +3,11 @@ import 'dart:math';
 
 import 'package:absensi_bps_2/classes/bidang.dart';
 import 'package:absensi_bps_2/classes/custom_bottom_nav_bar.dart';
+import 'package:absensi_bps_2/classes/rounded_image_widget.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/bloc.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/unduh_bloc.dart';
 import 'package:absensi_bps_2/laporankegiatan/entri_kegiatan_page.dart';
+import 'package:absensi_bps_2/login/logout_sso.dart';
 import 'package:absensi_bps_2/src/color.dart';
 import 'package:date_utils/date_utils.dart';
 import 'package:flutter/gestures.dart';
@@ -497,7 +499,57 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
 
     Widget homePage;
 
-    Widget ckpPage = Container();
+    Widget profilePage = Container(
+      width: MediaQuery.of(context).size.width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          SizedBox(
+            height: kToolbarHeight / 2,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: RoundedImageWidget(
+              imagePath: widget.selectedPegawai.foto,
+              showRanking: false,
+              isOnline: true,
+            ),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Text(
+            widget.selectedPegawai.nama,
+            style: TextStyle(
+                fontSize: 20,
+                color: primaryTextColor,
+                fontWeight: FontWeight.w500),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          GestureDetector(
+            onTap: _showLogoutDialog,
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 15),
+              margin: EdgeInsets.symmetric(horizontal: 20),
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                  color: mainColor, borderRadius: BorderRadius.circular(10)),
+              child: Center(
+                child: Text(
+                  "Sign Out",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
 
     if (widget.bidang == null) {
       homePage = HomePage(
@@ -760,7 +812,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
       } else if (_currentIndex == unduhPageIndex) {
         _currentPage = unduhPage;
       } else {
-        _currentPage = ckpPage;
+        _currentPage = profilePage;
       }
     }
 
@@ -975,7 +1027,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                         BottomNavyBarItem(
                             icon: Icon(Icons.file_download), title: "Unduh"),
                         BottomNavyBarItem(
-                            icon: Icon(Icons.exit_to_app), title: "Sign Out")
+                            icon: Icon(Icons.people), title: "Sign Out")
                       ],
                       onItemSelected: (index) {
                         if (_fabOptionIsOpen) {
@@ -2186,6 +2238,36 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
     }
 
     return permission == PermissionStatus.granted;
+  }
+
+  Future<void> _logout() async {
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+      return LogOutSSO();
+    }));
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Sign Out?"),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () {
+                  _logout();
+                },
+                child: Text("Ya"),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Tidak"),
+              ),
+            ],
+          );
+        });
   }
 }
 

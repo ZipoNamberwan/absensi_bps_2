@@ -68,7 +68,7 @@ final TextStyle loginHintTextStyle = TextStyle(fontSize: 13, color: Colors.grey)
 Color splashColor = Colors.blue;
 
 TextStyle userNameTextStyle = TextStyle(
-    fontSize: 25,
+    fontSize: 18,
     color: primaryTextColor,
     fontWeight: FontWeight.w500
 );
