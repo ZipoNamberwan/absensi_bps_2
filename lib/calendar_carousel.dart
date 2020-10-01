@@ -103,6 +103,7 @@ class CalendarCarousel<T> extends StatefulWidget {
   final Pegawai selectedPegawai;
   final MapPegawaiEvent<DetailAbsensi> mapPegawaiEvent;
   final MapPegawaiEvent<KeteranganAbsensi> mapKeteranganEvent;
+  final MapPegawaiEvent<bool> mapKegiatanEvent;
   final Bidang bidang;
   final Function onPressedDrawer;
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -179,6 +180,7 @@ class CalendarCarousel<T> extends StatefulWidget {
     this.selectedPegawai,
     this.mapPegawaiEvent,
     this.mapKeteranganEvent,
+    this.mapKegiatanEvent,
     this.bidang,
     this.onPressedDrawer,
     this.scaffoldKey,
@@ -211,6 +213,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   DateFormat _localeDate;
   MapEvent<DetailAbsensi> _mapAbsensi = new MapEvent();
   MapEvent<KeteranganAbsensi> _mapKeterangan = new MapEvent();
+  MapEvent<bool> _mapKegiatan = new MapEvent();
   AnimationController _animationEventController;
   AnimationController _animationKeteranganController;
   AnimationController _animationAfterPostController;
@@ -232,6 +235,7 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
   bool _isListPegawaiLoading = true;
   bool _isKeteranganLoading = true;
   MapEvent<bool> _mapDatetimeAfterPost = new MapEvent();
+  MapEvent<bool> _mapKegiatanAfterPost = new MapEvent();
   int _currentIndex = 0;
   Widget _currentPage;
   AnimationController _fadePageAnimationController;
@@ -1884,24 +1888,26 @@ class _CalendarState<T> extends State<CalendarCarousel<T>>
                 )));
 
     //Do something here to show result
-    if (result.status == StatusPage.afterPost) {
-      KeteranganAbsensi absensi = result.keteranganAbsensi;
-      _animationAfterPostController.reset();
-      _mapDatetimeAfterPost.add(result.dateTime, true);
-      _mapKeterangan = new MapEvent();
-      _mapKeterangan.add(absensi.dateTime, absensi);
-      widget.mapKeteranganEvent.add(_selectedPegawai, _mapKeterangan);
-    } else if (result.status == StatusPage.afterDelete) {
-      _animationAfterPostController.reset();
-      _mapDatetimeAfterPost.add(result.dateTime, true);
-      widget.mapKeteranganEvent.maps[_selectedPegawai].events
-          .remove(result.dateTime);
-    }
+    if (result != null) {
+      if (result['status_page'].status == StatusPage.afterPost) {
+        KeteranganAbsensi absensi = result['status_page'].keteranganAbsensi;
+        _animationAfterPostController.reset();
+        _mapDatetimeAfterPost.add(result['status_page'].dateTime, true);
+        _mapKeterangan = new MapEvent();
+        _mapKeterangan.add(absensi.dateTime, absensi);
+        widget.mapKeteranganEvent.add(_selectedPegawai, _mapKeterangan);
+      } else if (result['status_page'].status == StatusPage.afterDelete) {
+        _animationAfterPostController.reset();
+        _mapDatetimeAfterPost.add(result['status_page'].dateTime, true);
+        widget.mapKeteranganEvent.maps[_selectedPegawai].events
+            .remove(result['status_page'].dateTime);
+      }
 
-    setState(() {
-      _isReloadSelectedDate = false;
-      _animationAfterPostController.reverse(from: 100);
-    });
+      setState(() {
+        _isReloadSelectedDate = false;
+        _animationAfterPostController.reverse(from: 100);
+      });
+    }
   }
 
   void _showSnackBar(String message) {

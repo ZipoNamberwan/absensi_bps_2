@@ -115,82 +115,106 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   @override
   Widget build(BuildContext context) {
     _imageHeight = MediaQuery.of(context).size.height / 4;
-    return WillPopScope(
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: "Detail Absensi",
-          home: Scaffold(
-              key: _scaffoldKey,
-              body: Stack(
-                children: <Widget>[
-                  createPage(),
-                  (_isSaveLoading | _isDeleteLoading)
-                      ? LinearProgressIndicator()
-                      : Container(),
-                ],
-              ),
-              appBar: AppBar(
-                backgroundColor: Colors.transparent,
-                leading: IconButton(
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: Colors.black87,
-                  ),
-                  onPressed: () {
-                    _onbackPressed();
-                  },
-                ),
-                title: Text(
-                  widget.pegawai.nama,
-                  style: TextStyle(color: Colors.black87),
-                ),
-                elevation: 0,
-                actions: <Widget>[
-                  widget.keterangan.length > 0
-                      ? IconButton(
-                          icon: Icon(
-                            Icons.delete,
-                            color: Colors.black87,
-                          ),
-                          onPressed: () {
-                            !_isDeleteLoading
-                                ? _deleteFromServer(new PostKeteranganAbsensi(
-                                    datetime: widget.dateTime.toString(),
-                                    nip: widget.pegawai.nip,
-                                  ))
-                                : showSnackBar("Sedang Loading");
-                          },
-                        )
-                      : IconButton(
-                          icon: Icon(
-                            Icons.save,
-                            color: Colors.black87,
-                          ),
-                          onPressed: () {
-                            _selectedStatus != null
-                                ? !_isSaveLoading
-                                    ? _postToServer(new PostKeteranganAbsensi(
-                                        datetime: widget.dateTime.toString(),
-                                        idstatus: _selectedStatus,
-                                        keterangan: _keteranganController.text,
-                                        nip: widget.pegawai.nip,
-                                        base64Image: _base64Image,
-                                        fileName: _tmpFile != null
-                                            ? _tmpFile.path.split('/').last
-                                            : ""))
-                                    : showSnackBar("Sedang Loading")
-                                : showSnackBar("Status Belum Dipilih");
-                          },
-                          padding: EdgeInsets.only(right: 15),
+    return BlocProvider<LaporanHarianBloc>(
+      create: (context) {
+        return _bloc
+          ..add(GetKegiatanList(widget.pegawai.nip,
+              DateFormat("yyyy-MM-dd").format(widget.dateTime)));
+      },
+      child: BlocBuilder<LaporanHarianBloc, LaporanHarianState>(
+        builder: (context, state) {
+          return WillPopScope(
+              child: MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: "Detail Absensi",
+                home: Scaffold(
+                    key: _scaffoldKey,
+                    body: Stack(
+                      children: <Widget>[
+                        createPage(),
+                        (_isSaveLoading | _isDeleteLoading)
+                            ? LinearProgressIndicator()
+                            : Container(),
+                      ],
+                    ),
+                    appBar: AppBar(
+                      backgroundColor: Colors.transparent,
+                      leading: IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Colors.black87,
                         ),
-                ],
-              )),
-        ),
-        onWillPop: _onWillPop);
+                        onPressed: () {
+                          _onbackPressed(state.listKegiatan.isNotEmpty);
+                        },
+                      ),
+                      title: Text(
+                        widget.pegawai.nama,
+                        style: TextStyle(color: Colors.black87),
+                      ),
+                      elevation: 0,
+                      actions: <Widget>[
+                        widget.keterangan.length > 0
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: Colors.black87,
+                                ),
+                                onPressed: () {
+                                  !_isDeleteLoading
+                                      ? _deleteFromServer(
+                                          new PostKeteranganAbsensi(
+                                            datetime:
+                                                widget.dateTime.toString(),
+                                            nip: widget.pegawai.nip,
+                                          ),
+                                          state.listKegiatan.isNotEmpty)
+                                      : showSnackBar("Sedang Loading");
+                                },
+                              )
+                            : IconButton(
+                                icon: Icon(
+                                  Icons.save,
+                                  color: Colors.black87,
+                                ),
+                                onPressed: () {
+                                  _selectedStatus != null
+                                      ? !_isSaveLoading
+                                          ? _postToServer(
+                                              new PostKeteranganAbsensi(
+                                                  datetime: widget.dateTime
+                                                      .toString(),
+                                                  idstatus: _selectedStatus,
+                                                  keterangan:
+                                                      _keteranganController
+                                                          .text,
+                                                  nip: widget.pegawai.nip,
+                                                  base64Image: _base64Image,
+                                                  fileName: _tmpFile != null
+                                                      ? _tmpFile.path
+                                                          .split('/')
+                                                          .last
+                                                      : ""),
+                                              state.listKegiatan.isNotEmpty)
+                                          : showSnackBar("Sedang Loading")
+                                      : showSnackBar("Status Belum Dipilih");
+                                },
+                                padding: EdgeInsets.only(right: 15),
+                              ),
+                      ],
+                    )),
+              ),
+              onWillPop: () async {
+                _onWillPop(state.listKegiatan.isNotEmpty);
+                return true;
+              });
+        },
+      ),
+    );
   }
 
-  Future<bool> _onWillPop() async {
-    _onbackPressed();
+  Future<bool> _onWillPop(bool hasKegiatan) async {
+    _onbackPressed(hasKegiatan);
     return true;
   }
 
@@ -226,602 +250,324 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
   }
 
   Widget createPage() {
-    return BlocProvider<LaporanHarianBloc>(
-      create: (context) {
-        return _bloc
-          ..add(GetKegiatanList(widget.pegawai.nip,
-              DateFormat("yyyy-MM-dd").format(widget.dateTime)));
-      },
-      child: BlocBuilder<LaporanHarianBloc, LaporanHarianState>(
-        builder: (context, state) {
-          if (state is LoadingListKegiatan) {
-            return Container(
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          } else if (state is ErrorListKegiatan) {
-            return Container(
-              margin: EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    state.message,
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: mainColor,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: InkWell(
-                      onTap: () {
-                        _bloc.add(GetKegiatanList(widget.pegawai.nip,
-                            DateFormat("yyyy-MM-dd").format(widget.dateTime)));
-                      },
-                      child: Text(
-                        "RETRY",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            );
-          }
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: EdgeInsets.only(bottom: 10, top: 10),
-                  child: Center(
-                    child: Text(
-                      DateFormat.yMMMMd("id").format(widget.dateTime),
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+    return BlocBuilder<LaporanHarianBloc, LaporanHarianState>(
+      builder: (context, state) {
+        if (state is LoadingListKegiatan) {
+          return Container(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (state is ErrorListKegiatan) {
+          return Container(
+            margin: EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  state.message,
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  margin:
-                      EdgeInsets.only(top: 10, bottom: 15, left: 20, right: 20),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: mainColor,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      _bloc.add(GetKegiatanList(widget.pegawai.nip,
+                          DateFormat("yyyy-MM-dd").format(widget.dateTime)));
+                    },
+                    child: Text(
+                      "RETRY",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          );
+        }
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Container(
+                margin: EdgeInsets.only(bottom: 10, top: 10),
+                child: Center(
                   child: Text(
-                    "Daftar Kegiatan",
+                    DateFormat.yMMMMd("id").format(widget.dateTime),
                     style: TextStyle(
+                      fontSize: 25,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              BlocConsumer<LaporanHarianBloc, LaporanHarianState>(
-                listener: (context, state) {
-                  if (state is SuccessHapusKegiatan) {
-                    Kegiatan kegiatan = state.listKegiatan[state.index];
-                    _animatedListKey.currentState.removeItem(
-                      state.index,
-                      (BuildContext context, Animation<double> animation) {
-                        return FadeTransition(
-                          opacity: CurvedAnimation(
-                              parent: animation, curve: Interval(0.5, 1.0)),
-                          child: SizeTransition(
-                            sizeFactor: CurvedAnimation(
-                                parent: animation, curve: Interval(0.0, 1.0)),
-                            axisAlignment: 0.0,
-                            child: KegiatanItemWidget(
-                              kegiatan: kegiatan,
-                            ),
-                          ),
-                        );
-                      },
-                      duration: Duration(milliseconds: 600),
-                    );
-                    _bloc.add(
-                        FinalHapusKegiatanHarian(state.index, kegiatan.id));
-                  } else if (state is ErrorHapusKegiatan) {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            title: Text(
-                              "Error",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            content: Text(
-                              state.message,
-                              style: TextStyle(color: Colors.black54),
-                            ),
-                            actions: <Widget>[
-                              FlatButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text("Ok")),
-                            ],
-                          );
-                        },
-                        barrierDismissible: true);
-                  }
-                },
-                builder: (context, state) {
-                  return SliverAnimatedList(
-                    key: _animatedListKey,
-                    itemBuilder: (context, i, animation) {
-                      bool isLoading = false;
-                      if (state is LoadingHapusKegiatan) {
-                        isLoading = state.index == i;
-                      }
-
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                margin:
+                    EdgeInsets.only(top: 10, bottom: 15, left: 20, right: 20),
+                child: Text(
+                  "Daftar Kegiatan",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            BlocConsumer<LaporanHarianBloc, LaporanHarianState>(
+              listener: (context, state) {
+                if (state is SuccessHapusKegiatan) {
+                  Kegiatan kegiatan = state.listKegiatan[state.index];
+                  _animatedListKey.currentState.removeItem(
+                    state.index,
+                    (BuildContext context, Animation<double> animation) {
                       return FadeTransition(
-                        opacity: animation,
+                        opacity: CurvedAnimation(
+                            parent: animation, curve: Interval(0.5, 1.0)),
                         child: SizeTransition(
                           sizeFactor: CurvedAnimation(
-                              parent: animation
-                                  .drive(Tween<double>(begin: 0.0, end: 1.0)),
-                              curve: Interval(0.0, 1.0)),
+                              parent: animation, curve: Interval(0.0, 1.0)),
+                          axisAlignment: 0.0,
                           child: KegiatanItemWidget(
-                            isLoading: isLoading,
-                            kegiatan: state.listKegiatan[i],
-                            onEditTap: () async {
-                              _navigateToEditKegiatanPage(
-                                  state.listKegiatan[i]);
-                            },
-                            onRemoveTap: () {
-                              _bloc.add(StartHapusKegiatanHarian(
-                                  i, state.listKegiatan[i].id));
-                            },
+                            kegiatan: kegiatan,
                           ),
                         ),
                       );
                     },
-                    initialItemCount: state.listKegiatan.length,
+                    duration: Duration(milliseconds: 600),
                   );
-                },
-              ),
-              SliverToBoxAdapter(
-                child: GestureDetector(
-                  onTap: _navigateToTambahKegiatanPage,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    width: MediaQuery.of(context).size.width,
-                    margin: EdgeInsets.only(
-                        left: 20, right: 20, bottom: 20, top: 20),
-                    decoration: BoxDecoration(
-                        color: mainColor,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(
-                          Icons.add_circle,
-                          color: Colors.white,
+                  _bloc.add(FinalHapusKegiatanHarian(state.index, kegiatan.id));
+                } else if (state is ErrorHapusKegiatan) {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          title: Text(
+                            "Error",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          content: Text(
+                            state.message,
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                          actions: <Widget>[
+                            FlatButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Text("Ok")),
+                          ],
+                        );
+                      },
+                      barrierDismissible: true);
+                }
+              },
+              builder: (context, state) {
+                return SliverAnimatedList(
+                  key: _animatedListKey,
+                  itemBuilder: (context, i, animation) {
+                    bool isLoading = false;
+                    if (state is LoadingHapusKegiatan) {
+                      isLoading = state.index == i;
+                    }
+
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: CurvedAnimation(
+                            parent: animation
+                                .drive(Tween<double>(begin: 0.0, end: 1.0)),
+                            curve: Interval(0.0, 1.0)),
+                        child: KegiatanItemWidget(
+                          isLoading: isLoading,
+                          kegiatan: state.listKegiatan[i],
+                          onEditTap: () async {
+                            _navigateToEditKegiatanPage(state.listKegiatan[i]);
+                          },
+                          onRemoveTap: () {
+                            _bloc.add(StartHapusKegiatanHarian(
+                                i, state.listKegiatan[i].id));
+                          },
                         ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Text(
-                          "TAMBAH KEGIATAN",
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
+                      ),
+                    );
+                  },
+                  initialItemCount: state.listKegiatan.length,
+                );
+              },
+            ),
+            SliverToBoxAdapter(
+              child: GestureDetector(
+                onTap: _navigateToTambahKegiatanPage,
                 child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  width: MediaQuery.of(context).size.width,
                   margin:
-                      EdgeInsets.only(top: 10, bottom: 15, left: 20, right: 20),
-                  child: Text(
-                    "Absensi",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                      EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 20),
+                  decoration: BoxDecoration(
+                      color: mainColor,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        Icons.add_circle,
+                        color: Colors.white,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        "TAMBAH KEGIATAN",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      )
+                    ],
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: EdgeInsets.all(10),
-                  child: Column(
-                    children: <Widget>[
-                      Stack(
-                        children: <Widget>[
-                          FadeTranslateContainer(
-                            child: Card(
-                              child: Container(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: <Widget>[
-                                    Container(
-                                      margin: EdgeInsets.only(
-                                        bottom: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(3),
-                                      ),
-                                      padding: EdgeInsets.only(
-                                        top: 10,
-                                        right: 10,
-                                        left: 10,
-                                        bottom: 10,
-                                      ),
-                                      child: Text(
-                                        "Waktu datang dan pulang",
-                                        style: TextStyle(fontSize: 11),
-                                      ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                margin:
+                    EdgeInsets.only(top: 10, bottom: 15, left: 20, right: 20),
+                child: Text(
+                  "Absensi",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                padding: EdgeInsets.all(10),
+                child: Column(
+                  children: <Widget>[
+                    Stack(
+                      children: <Widget>[
+                        FadeTranslateContainer(
+                          child: Card(
+                            child: Container(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: <Widget>[
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                      bottom: 10,
                                     ),
-                                    Container(
-                                      padding: EdgeInsets.only(
-                                        bottom: 10,
-                                        left: 10,
-                                        right: 10,
-                                      ),
-                                      child: Row(
-                                        children: <Widget>[
-                                          Container(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width /
-                                                3,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Center(
-                                                child: Column(
-                                              children: <Widget>[
-                                                Text(
-                                                  " ",
-                                                  style: TextStyle(
-                                                    fontSize: 25,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  " ",
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                  ),
-                                                ),
-                                              ],
-                                            )),
-                                            padding: EdgeInsets.all(10),
-                                          ),
-                                          Container(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width /
-                                                3,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Center(
-                                                child: Column(
-                                              children: <Widget>[
-                                                Text(
-                                                  " ",
-                                                  style: TextStyle(
-                                                    fontSize: 25,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  " ",
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                  ),
-                                                ),
-                                              ],
-                                            )),
-                                            padding: EdgeInsets.all(10),
-                                          ),
-                                        ],
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                      ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(3),
                                     ),
-                                  ],
-                                ),
+                                    padding: EdgeInsets.only(
+                                      top: 10,
+                                      right: 10,
+                                      left: 10,
+                                      bottom: 10,
+                                    ),
+                                    child: Text(
+                                      "Waktu datang dan pulang",
+                                      style: TextStyle(fontSize: 11),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.only(
+                                      bottom: 10,
+                                      left: 10,
+                                      right: 10,
+                                    ),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
+                                              3,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Center(
+                                              child: Column(
+                                            children: <Widget>[
+                                              Text(
+                                                " ",
+                                                style: TextStyle(
+                                                  fontSize: 25,
+                                                ),
+                                              ),
+                                              Text(
+                                                " ",
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ],
+                                          )),
+                                          padding: EdgeInsets.all(10),
+                                        ),
+                                        Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
+                                              3,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Center(
+                                              child: Column(
+                                            children: <Widget>[
+                                              Text(
+                                                " ",
+                                                style: TextStyle(
+                                                  fontSize: 25,
+                                                ),
+                                              ),
+                                              Text(
+                                                " ",
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ],
+                                          )),
+                                          padding: EdgeInsets.all(10),
+                                        ),
+                                      ],
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            animation: CurvedAnimation(
-                                parent: _pageAnimationController,
-                                curve: Interval(
-                                  0.25,
-                                  0.5,
-                                )),
                           ),
-                          Container(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: <Widget>[
-                                Container(
-                                  margin: EdgeInsets.only(
-                                    bottom: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                  padding: EdgeInsets.only(
-                                    top: 10,
-                                    right: 10,
-                                    left: 10,
-                                    bottom: 10,
-                                  ),
-                                  child: Text(
-                                    " ",
-                                    style: TextStyle(fontSize: 11),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    bottom: 10,
-                                    left: 10,
-                                    right: 10,
-                                  ),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Hero(
-                                        child: Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width /
-                                              3,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: getAbsenMasukColor(),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                  color: Colors.grey,
-                                                  blurRadius: 1,
-                                                  offset: Offset.fromDirection(
-                                                      1, 1))
-                                            ],
-                                          ),
-                                          child: Center(
-                                              child: Column(
-                                            children: <Widget>[
-                                              Text(
-                                                _absenMasuk.time,
-                                                style: TextStyle(
-                                                  fontSize: 25,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              Text(
-                                                "datang",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 11,
-                                                ),
-                                              ),
-                                            ],
-                                          )),
-                                          padding: EdgeInsets.all(10),
-                                        ),
-                                        tag: (new DateFormat('dd MM yyyy'))
-                                                .format(widget.dateTime) +
-                                            '0',
-                                      ),
-                                      Hero(
-                                        child: Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width /
-                                              3,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: getAbsenPulangColor(),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                  color: Colors.grey,
-                                                  blurRadius: 1,
-                                                  offset: Offset.fromDirection(
-                                                      1, 1))
-                                            ],
-                                          ),
-                                          child: Center(
-                                              child: Column(
-                                            children: <Widget>[
-                                              Text(
-                                                _absenPulang.time,
-                                                style: TextStyle(
-                                                  fontSize: 25,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              Text(
-                                                "pulang",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 11,
-                                                ),
-                                              ),
-                                            ],
-                                          )),
-                                          padding: EdgeInsets.all(10),
-                                        ),
-                                        tag: (new DateFormat('dd MM yyyy'))
-                                                .format(widget.dateTime) +
-                                            '1',
-                                      ),
-                                    ],
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      FadeTranslateContainer(
-                        child: Card(
-                          child: Container(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: <Widget>[
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                  padding: EdgeInsets.all(10),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Text(
-                                        "Keterangan Absensi",
-                                        style: TextStyle(fontSize: 11),
-                                      ),
-                                      Spacer(),
-                                      Container(
-                                          margin: EdgeInsets.only(right: 10),
-                                          child: ((widget.keterangan.length !=
-                                                      0) |
-                                                  (_afterUpdate))
-                                              ? FadeTransition(
-                                                  opacity: _animationCheck,
-                                                  child: Icon(
-                                                    Icons.check_circle,
-                                                    color: Colors.blueAccent,
-                                                    size: 20,
-                                                  ))
-                                              : null),
-                                      _isLoadingStatus
-                                          ? SizedBox(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                              width: 15,
-                                              height: 15,
-                                            )
-                                          : Container(),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 10,
-                                    right: 10,
-                                    bottom: 10,
-                                  ),
-                                  child: Column(
-                                    children: <Widget>[
-                                      DropdownButton<String>(
-                                        items: _mapStatus.maps != null
-                                            ? _createDropdownItems()
-                                            : [],
-                                        onChanged: (idstatus) {
-                                          setState(() {
-                                            _selectedStatus = idstatus;
-                                          });
-                                        },
-                                        isExpanded: true,
-                                        value: _mapStatus.maps == null
-                                            ? null
-                                            : _selectedStatus != null
-                                                ? _mapStatus
-                                                    .maps[_selectedStatus].id
-                                                : null,
-                                        underline: _selectedStatus != null
-                                            ? Container(
-                                                height: 1.0,
-                                                decoration: const BoxDecoration(
-                                                    border: Border(
-                                                        bottom: BorderSide(
-                                                            color: Colors
-                                                                .blueAccent,
-                                                            width: 2.0))),
-                                              )
-                                            : Container(
-                                                height: 1.0,
-                                                decoration: const BoxDecoration(
-                                                    border: Border(
-                                                        bottom: BorderSide(
-                                                            color: Color(
-                                                                0xFFBDBDBD),
-                                                            width: 0.0))),
-                                              ),
-                                        hint: Text(
-                                          "Status Absensi...",
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                      ),
-                                      TextFormField(
-                                        decoration: new InputDecoration(
-                                          labelText: "Isi keterangan...",
-                                          labelStyle: TextStyle(fontSize: 14),
-                                          fillColor: Colors.white,
-                                          isDense: true,
-                                          enabledBorder:
-                                              _initialKeteranganStatus != null
-                                                  ? new OutlineInputBorder(
-                                                      borderRadius:
-                                                          new BorderRadius
-                                                              .circular(5.0),
-                                                      borderSide:
-                                                          new BorderSide(
-                                                        color:
-                                                            Colors.blueAccent,
-                                                        width: 2,
-                                                      ))
-                                                  : new OutlineInputBorder(
-                                                      borderRadius:
-                                                          new BorderRadius
-                                                              .circular(5.0),
-                                                      borderSide:
-                                                          new BorderSide(
-                                                        color: Colors.grey[200],
-                                                      ),
-                                                    ),
-                                          //fillColor: Colors.green
-                                        ),
-                                        controller: _keteranganController,
-                                        maxLines: 3,
-                                        validator: (val) {
-                                          if (val.length == 0) {
-                                            return "Email cannot be empty";
-                                          } else {
-                                            return null;
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          animation: CurvedAnimation(
+                              parent: _pageAnimationController,
+                              curve: Interval(
+                                0.25,
+                                0.5,
+                              )),
                         ),
-                        animation: CurvedAnimation(
-                            parent: _pageAnimationController,
-                            curve: Interval(
-                              0.5,
-                              0.75,
-                            )),
-                      ),
-                      FadeTranslateContainer(
-                        child: Card(
+                        Container(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
                               Container(
+                                margin: EdgeInsets.only(
+                                  bottom: 10,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[200],
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                                 padding: EdgeInsets.only(
@@ -831,73 +577,335 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
                                   bottom: 10,
                                 ),
                                 child: Text(
-                                  "Bukti",
+                                  " ",
                                   style: TextStyle(fontSize: 11),
                                 ),
                               ),
-                              widget.keterangan.length == 0
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 16, right: 16, top: 8),
-                                      child: OutlineButton(
-                                        onPressed: _chooseImage,
-                                        splashColor: splashColor,
-                                        child: Text("Pilih Gambar"),
-                                      ),
-                                    )
-                                  : Container(),
                               Container(
                                 padding: EdgeInsets.only(
-                                    left: 16, right: 16, bottom: 16, top: 8),
-                                child: widget.keterangan.length == 0
-                                    ? _showImage()
-                                    : ((_initialImagePath != '') &
-                                            (_initialImagePath != null))
-                                        ? Container(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.only(top: 8),
-                                              child: Image.network(
-                                                _initialImagePath,
-                                                height: _imageHeight,
-                                                fit: BoxFit.cover,
-                                                semanticLabel: "image",
-                                                loadingBuilder:
-                                                    (context, widget, chunk) {
-                                                  if (chunk == null)
-                                                    return widget;
-                                                  return LinearProgressIndicator();
-                                                },
+                                  bottom: 10,
+                                  left: 10,
+                                  right: 10,
+                                ),
+                                child: Row(
+                                  children: <Widget>[
+                                    Hero(
+                                      child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                3,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: getAbsenMasukColor(),
+                                          boxShadow: [
+                                            BoxShadow(
+                                                color: Colors.grey,
+                                                blurRadius: 1,
+                                                offset:
+                                                    Offset.fromDirection(1, 1))
+                                          ],
+                                        ),
+                                        child: Center(
+                                            child: Column(
+                                          children: <Widget>[
+                                            Text(
+                                              _absenMasuk.time,
+                                              style: TextStyle(
+                                                fontSize: 25,
+                                                color: Colors.white,
                                               ),
                                             ),
-                                          )
-                                        : Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 8.0),
-                                            child: Text(
-                                              'Tidak ada bukti diupload',
-                                              textAlign: TextAlign.center,
+                                            Text(
+                                              "datang",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                              ),
                                             ),
-                                          ),
+                                          ],
+                                        )),
+                                        padding: EdgeInsets.all(10),
+                                      ),
+                                      tag: (new DateFormat('dd MM yyyy'))
+                                              .format(widget.dateTime) +
+                                          '0',
+                                    ),
+                                    Hero(
+                                      child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                3,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: getAbsenPulangColor(),
+                                          boxShadow: [
+                                            BoxShadow(
+                                                color: Colors.grey,
+                                                blurRadius: 1,
+                                                offset:
+                                                    Offset.fromDirection(1, 1))
+                                          ],
+                                        ),
+                                        child: Center(
+                                            child: Column(
+                                          children: <Widget>[
+                                            Text(
+                                              _absenPulang.time,
+                                              style: TextStyle(
+                                                fontSize: 25,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            Text(
+                                              "pulang",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        )),
+                                        padding: EdgeInsets.all(10),
+                                      ),
+                                      tag: (new DateFormat('dd MM yyyy'))
+                                              .format(widget.dateTime) +
+                                          '1',
+                                    ),
+                                  ],
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        animation: CurvedAnimation(
-                            parent: _pageAnimationController,
-                            curve: Interval(
-                              0.75,
-                              1.0,
-                            )),
+                      ],
+                    ),
+                    FadeTranslateContainer(
+                      child: Card(
+                        child: Container(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                padding: EdgeInsets.all(10),
+                                child: Row(
+                                  children: <Widget>[
+                                    Text(
+                                      "Keterangan Absensi",
+                                      style: TextStyle(fontSize: 11),
+                                    ),
+                                    Spacer(),
+                                    Container(
+                                        margin: EdgeInsets.only(right: 10),
+                                        child:
+                                            ((widget.keterangan.length != 0) |
+                                                    (_afterUpdate))
+                                                ? FadeTransition(
+                                                    opacity: _animationCheck,
+                                                    child: Icon(
+                                                      Icons.check_circle,
+                                                      color: Colors.blueAccent,
+                                                      size: 20,
+                                                    ))
+                                                : null),
+                                    _isLoadingStatus
+                                        ? SizedBox(
+                                            child: CircularProgressIndicator(),
+                                            width: 15,
+                                            height: 15,
+                                          )
+                                        : Container(),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.only(
+                                  left: 10,
+                                  right: 10,
+                                  bottom: 10,
+                                ),
+                                child: Column(
+                                  children: <Widget>[
+                                    DropdownButton<String>(
+                                      items: _mapStatus.maps != null
+                                          ? _createDropdownItems()
+                                          : [],
+                                      onChanged: (idstatus) {
+                                        setState(() {
+                                          _selectedStatus = idstatus;
+                                        });
+                                      },
+                                      isExpanded: true,
+                                      value: _mapStatus.maps == null
+                                          ? null
+                                          : _selectedStatus != null
+                                              ? _mapStatus
+                                                  .maps[_selectedStatus].id
+                                              : null,
+                                      underline: _selectedStatus != null
+                                          ? Container(
+                                              height: 1.0,
+                                              decoration: const BoxDecoration(
+                                                  border: Border(
+                                                      bottom: BorderSide(
+                                                          color:
+                                                              Colors.blueAccent,
+                                                          width: 2.0))),
+                                            )
+                                          : Container(
+                                              height: 1.0,
+                                              decoration: const BoxDecoration(
+                                                  border: Border(
+                                                      bottom: BorderSide(
+                                                          color:
+                                                              Color(0xFFBDBDBD),
+                                                          width: 0.0))),
+                                            ),
+                                      hint: Text(
+                                        "Status Absensi...",
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                    TextFormField(
+                                      decoration: new InputDecoration(
+                                        labelText: "Isi keterangan...",
+                                        labelStyle: TextStyle(fontSize: 14),
+                                        fillColor: Colors.white,
+                                        isDense: true,
+                                        enabledBorder:
+                                            _initialKeteranganStatus != null
+                                                ? new OutlineInputBorder(
+                                                    borderRadius:
+                                                        new BorderRadius
+                                                            .circular(5.0),
+                                                    borderSide: new BorderSide(
+                                                      color: Colors.blueAccent,
+                                                      width: 2,
+                                                    ))
+                                                : new OutlineInputBorder(
+                                                    borderRadius:
+                                                        new BorderRadius
+                                                            .circular(5.0),
+                                                    borderSide: new BorderSide(
+                                                      color: Colors.grey[200],
+                                                    ),
+                                                  ),
+                                        //fillColor: Colors.green
+                                      ),
+                                      controller: _keteranganController,
+                                      maxLines: 3,
+                                      validator: (val) {
+                                        if (val.length == 0) {
+                                          return "Email cannot be empty";
+                                        } else {
+                                          return null;
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                      animation: CurvedAnimation(
+                          parent: _pageAnimationController,
+                          curve: Interval(
+                            0.5,
+                            0.75,
+                          )),
+                    ),
+                    FadeTranslateContainer(
+                      child: Card(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              padding: EdgeInsets.only(
+                                top: 10,
+                                right: 10,
+                                left: 10,
+                                bottom: 10,
+                              ),
+                              child: Text(
+                                "Bukti",
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ),
+                            widget.keterangan.length == 0
+                                ? Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 16, right: 16, top: 8),
+                                    child: OutlineButton(
+                                      onPressed: _chooseImage,
+                                      splashColor: splashColor,
+                                      child: Text("Pilih Gambar"),
+                                    ),
+                                  )
+                                : Container(),
+                            Container(
+                              padding: EdgeInsets.only(
+                                  left: 16, right: 16, bottom: 16, top: 8),
+                              child: widget.keterangan.length == 0
+                                  ? _showImage()
+                                  : ((_initialImagePath != '') &
+                                          (_initialImagePath != null))
+                                      ? Container(
+                                          child: Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 8),
+                                            child: Image.network(
+                                              _initialImagePath,
+                                              height: _imageHeight,
+                                              fit: BoxFit.cover,
+                                              semanticLabel: "image",
+                                              loadingBuilder:
+                                                  (context, widget, chunk) {
+                                                if (chunk == null)
+                                                  return widget;
+                                                return LinearProgressIndicator();
+                                              },
+                                            ),
+                                          ),
+                                        )
+                                      : Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 8.0),
+                                          child: Text(
+                                            'Tidak ada bukti diupload',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      animation: CurvedAnimation(
+                          parent: _pageAnimationController,
+                          curve: Interval(
+                            0.75,
+                            1.0,
+                          )),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1009,7 +1017,7 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
     return false;
   }
 
-  void _deleteFromServer(PostKeteranganAbsensi post) {
+  void _deleteFromServer(PostKeteranganAbsensi post, bool hasKegiatan) {
     setState(() {
       _isSaveLoading = true;
     });
@@ -1022,11 +1030,11 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
             keteranganAbsensi: null,
             dateTime: widget.dateTime);
       });
-      _onbackPressed();
+      _onbackPressed(hasKegiatan);
     });
   }
 
-  void _postToServer(PostKeteranganAbsensi post) {
+  void _postToServer(PostKeteranganAbsensi post, bool hasKegiatan) {
     setState(() {
       _isSaveLoading = true;
     });
@@ -1050,12 +1058,13 @@ class _DetailAbsensiState extends State<DetailAbsensiPage>
         _afterUpdate = true;
         _isSaveLoading = false;
       });
-      _onbackPressed();
+      _onbackPressed(hasKegiatan);
     });
   }
 
-  void _onbackPressed() {
-    Navigator.pop(context, _statusPage);
+  void _onbackPressed(bool hasKegiatan) {
+    Navigator.pop(
+        context, {"status_page": _statusPage, "has_kegiatan": hasKegiatan});
   }
 
   void showSnackBar(String message) {

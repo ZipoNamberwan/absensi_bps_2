@@ -14,7 +14,7 @@ import 'classes/keterangan_absensi.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(new MyApp());
-  }
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -70,6 +70,7 @@ class _AbsensiPageState extends State<AbsensiPage>
   MapList<Status> statusList = new MapList();
   MapPegawaiEvent<DetailAbsensi> mapPegawaiEvent = new MapPegawaiEvent();
   MapPegawaiEvent<KeteranganAbsensi> mapKeteranganEvent = new MapPegawaiEvent();
+  MapPegawaiEvent<bool> mapKegiatanEvent = new MapPegawaiEvent();
   CalendarCarousel _calendarCarousel;
 
   @override
@@ -89,31 +90,13 @@ class _AbsensiPageState extends State<AbsensiPage>
     double height;
 
     if (widget.bidang != null) {
-      height = MediaQuery
-          .of(context)
-          .size
-          .height -
-          MediaQuery
-              .of(context)
-              .padding
-              .bottom -
-          MediaQuery
-              .of(context)
-              .padding
-              .top;
+      height = MediaQuery.of(context).size.height -
+          MediaQuery.of(context).padding.bottom -
+          MediaQuery.of(context).padding.top;
     } else {
-      height = MediaQuery
-          .of(context)
-          .size
-          .height -
-          MediaQuery
-              .of(context)
-              .padding
-              .bottom -
-          MediaQuery
-              .of(context)
-              .padding
-              .top -
+      height = MediaQuery.of(context).size.height -
+          MediaQuery.of(context).padding.bottom -
+          MediaQuery.of(context).padding.top -
           kBottomNavigationBarHeight;
     }
 
@@ -136,10 +119,7 @@ class _AbsensiPageState extends State<AbsensiPage>
       iconColor: Colors.black,
       weekFormat: false,
       height: height,
-      width: MediaQuery
-          .of(context)
-          .size
-          .width,
+      width: MediaQuery.of(context).size.width,
       customGridViewPhysics: NeverScrollableScrollPhysics(),
       weekdayRowHeight: 40,
       markedDateShowIcon: true,
@@ -156,6 +136,7 @@ class _AbsensiPageState extends State<AbsensiPage>
       statusList: statusList,
       mapPegawaiEvent: mapPegawaiEvent,
       mapKeteranganEvent: mapKeteranganEvent,
+      mapKegiatanEvent: mapKegiatanEvent,
       bidang: widget.bidang != null ? widget.bidang : null,
       selectedPegawai: widget.pegawai != null ? widget.pegawai : null,
       onPressedDrawer: () {
