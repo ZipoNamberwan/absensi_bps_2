@@ -22,10 +22,10 @@ dependencies:
     sdk: flutter
   date_utils: ^0.1.0
   http: ^0.12.0+2
-  fluro: "^1.5.0"
+  fluro: ^1.5.0
   shared_preferences: ^0.5.6
   image_picker: ^0.6.3
-  flutter_svg: ^0.17.0
+  flutter_svg: ^0.19.1
   bottom_navy_bar: ^5.3.2
   equatable: ^1.2.0
   flutter_bloc: ^4.0.1
@@ -36,7 +36,7 @@ dependencies:
   simple_auth_flutter: ^2.0.7
   flutter_webview_plugin: ^0.3.11
   flutter_inappwebview: 4.0.0
-  path_provider: ^1.6.14
+  path_provider: ^1.6.27
   permission_handler: ^5.0.1+1
   open_file: ^3.0.1
   flutter_local_notifications: ^1.4.4+4

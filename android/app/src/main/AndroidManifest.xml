@@ -10,6 +10,7 @@
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:icon="@mipmap/ic_launcher_round"
+        android:requestLegacyExternalStorage="true"
         android:label="Absensi BPS Provinsi NTT"
         android:usesCleartextTraffic="true">
         <!--<meta-data

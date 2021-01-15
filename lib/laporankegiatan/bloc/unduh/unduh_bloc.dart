@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/bloc.dart';
 import 'package:absensi_bps_2/laporankegiatan/bloc/unduh/unduh_event.dart';
@@ -8,6 +9,7 @@ import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 class UnduhBloc extends Bloc<UnduhEvent, UnduhState> {
   DataRepository repository = DataRepository();
@@ -76,11 +78,19 @@ class UnduhBloc extends Bloc<UnduhEvent, UnduhState> {
       yield ErrorState(e.toString(), from: state.from, to: state.to);
     }
   }
-/*
-  Future<Directory> _getDownloadDirectory() async {
-    if (Platform.isAndroid) {
-      return await DownloadsPathProvider.downloadsDirectory;
+
+  static Future<String> createFolderInAppDocDir(String folderName) async {
+
+    //Get this App Document Directory
+    final List<Directory> _appDocDir = await getExternalStorageDirectories(type: StorageDirectory.downloads);
+
+    final Directory _appDocDirFolder =  Directory('${_appDocDir[0].path}/$folderName/');
+
+    if(await _appDocDirFolder.exists()){ //if folder already exists return path
+      return _appDocDirFolder.path;
+    }else{//if folder not exists create folder and then return its path
+      final Directory _appDocDirNewFolder=await _appDocDirFolder.create(recursive: true);
+      return _appDocDirNewFolder.path;
     }
-    return await getApplicationDocumentsDirectory();
-  }*/
+  }
 }
